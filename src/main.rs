@@ -3,57 +3,89 @@
 // - Successfully make a Grid that implements program
 // - Use this GridProgram implementation to make a running application
 
-use iced::*;
+
+use iced::Application;
+use iced::executor;
+use iced::widget::button;
+use iced::widget::Container;
+use iced::widget::container;
+use iced::widget::canvas::*;
+use iced::Theme;
+use iced::Rectangle;
+use iced::Sandbox;
+use iced::Color;
+use iced::Command;
+use iced::widget::Row;
+use iced::window::Settings;
+
 
 #[derive(Debug, Clone, Copy)]
 enum Message {
-    AddChar
+    Enlarge
 }
-struct BasicStruct{
-    my_text: String
+struct Circle{
+    radius: f32
 }
 
-impl Sandbox for BasicStruct{
+impl iced::widget::canvas::Program<Message> for Circle{
+    type State = ();
+
+    fn draw(&self, state: &Self::State, theme: &Theme, bounds: Rectangle, _cursor: Cursor) -> Vec<Geometry>{
+
+        let mut frame = Frame::new(bounds.size());
+
+        let circle = Path::circle(frame.center(), self.radius);
+
+        frame.fill(&circle,Color::BLACK);
+
+        vec![frame.into_geometry()]
+    }
+
+    
+    
+}
+
+struct MyApplication{
+   radius_value: f32
+}
+
+
+impl Application for MyApplication{
     type Message = Message;
-    //Constructor (sorta)
-    fn new() -> BasicStruct {
-        BasicStruct {my_text: String::from("Togo is fat")}
+    type Executor = executor::Default;
+    type Theme = Theme;
+    type Flags = ();
+
+    fn title(&self) -> String {
+        String::from("Circle")
     }
 
-    //Returns the title of our program
-    fn title(&self) -> String{
-        String::from("1")
+    fn new(flags: Self::Flags) -> (Self,Command<Self::Message>) {
+        (
+            Self {radius_value: 50.0},
+            Command::none()
+        )
     }
 
-    //this is where the logic of our program is called. We use update to modify the state of our program using Messages
-    fn update(&mut self, message: Self::Message){
-        println!("Update called");
-        match(message){
-            Message::AddChar =>{
-                self.my_text.insert(9, 'a')
-            }
+    fn view(&self) -> iced::Element<Self::Message> {
+       let canvas =  Canvas::new(Circle {radius: self.radius_value});
+       let button: iced::widget::Button<Message> = button("+").on_press(Message::Enlarge);
+       let row = Row::new().push(button).push(canvas);
+       container(row).into()
+        
+    }
+
+    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
+        match(message) {
+            Message::Enlarge => {
+                self.radius_value+=1.0;
+            } 
         }
-       
-    }
+     Command::none()
 
-    //returns widgets that will be displayed on our program
-    fn view(&self) -> Element<Self::Message>{
-       let mut buttons: Vec<iced::widget::Button<Message>> = vec![];
-       let mut counter: i32 = 0;
-       while(counter < 20){
-            counter+=1;
-            buttons.push(iced::widget::button("A").on_press(Message::AddChar))
-       }
-
-       let mut column =  iced::widget::column![iced::widget::button("A").on_press(Message::AddChar)];
-       column = column.push(iced::widget::button("A").on_press(Message::AddChar)); 
-       column.into()
-       
-
-       
     }
 }
 
-fn main() -> iced::Result{
-    <BasicStruct as Sandbox>::run(iced::Settings::default())
+fn main(){
+    MyApplication::run(iced::Settings::default());
 }
