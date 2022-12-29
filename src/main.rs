@@ -17,7 +17,7 @@ impl Sandbox for BasicStruct{
     type Message = Message;
     //Constructor (sorta)
     fn new() -> BasicStruct {
-        BasicStruct {my_text: String::from("Default String")}
+        BasicStruct {my_text: String::from("Togo is fat")}
     }
 
     //Returns the title of our program
@@ -30,7 +30,7 @@ impl Sandbox for BasicStruct{
         println!("Update called");
         match(message){
             Message::AddChar =>{
-                self.my_text.push('a')
+                self.my_text.insert(9, 'a')
             }
         }
        
@@ -38,10 +38,18 @@ impl Sandbox for BasicStruct{
 
     //returns widgets that will be displayed on our program
     fn view(&self) -> Element<Self::Message>{
-       iced::widget::row![
-        iced::widget::text(&self.my_text),
-        iced::widget::button("Add char").on_press(Message::AddChar)
-       ].padding(20).into()
+       let mut buttons: Vec<iced::widget::Button<Message>> = vec![];
+       let mut counter: i32 = 0;
+       while(counter < 20){
+            counter+=1;
+            buttons.push(iced::widget::button("A").on_press(Message::AddChar))
+       }
+
+       let mut column =  iced::widget::column![iced::widget::button("A").on_press(Message::AddChar)];
+       column = column.push(iced::widget::button("A").on_press(Message::AddChar)); 
+       column.into()
+       
+
        
     }
 }
