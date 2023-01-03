@@ -1,103 +1,112 @@
-//TODO  Learn how canvas works in iced
-// - Make a basic running GUI program
-// - Successfully make a Grid that implements program
-// - Use this GridProgram implementation to make a running application
-
-use iced::executor;
-use iced::widget::button;
-use iced::widget::canvas::*;
-use iced::widget::container;
-use iced::widget::Container;
-use iced::widget::Row;
-use iced::window::Settings;
-use iced::Application;
-use iced::Color;
-use iced::Command;
-use iced::Length;
-use iced::Point;
-use iced::Rectangle;
-use iced::Sandbox;
-use iced::Size;
-use iced::Theme;
-use grid::*;
-
-#[derive(Debug, Clone, Copy)]
-enum Message {
-    Enlarge,
-}
-struct Square {
-    colors: (f32,f32,f32),
-    
-}
-
-impl iced::widget::canvas::Program<Message> for Square {
-    type State = ();
-
-    fn draw(
-        &self,
-        state: &Self::State,
-        theme: &Theme,
-        bounds: Rectangle,
-        _cursor: Cursor,
-    ) -> Vec<Geometry> {
-        let mut frame = Frame::new(bounds.size());
-
-        // let circle = Path::circle(frame.center(), self.radius);
-        let mut counter: f32 = 0.0;
-        while counter < 15.0{
-            counter+=1.0;
-            let square: Path = Path::rectangle(Point::new(15.0*counter, 15.0*counter),Size::from([15.0,15.0]));
-            frame.fill(&square, Color::from_rgb(self.colors.0, self.colors.1, self.colors.2));
-        }
-        
-
-        vec![frame.into_geometry()]
-    }
-
-
-}
-
-struct MyApplication {
-    app_colors: (f32,f32,f32)
-}
-
-impl Application for MyApplication {
-    type Message = Message;
-    type Executor = executor::Default;
-    type Theme = Theme;
-    type Flags = ();
-
-    fn title(&self) -> String {
-        String::from("Circle")
-    }
-
-    fn new(flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        (Self {app_colors: (0.0,0.0,0.0) }, Command::none())
-    }
-
-    fn view(&self) -> iced::Element<Self::Message> {
-        let r = self.app_colors.0;
-        let g = self.app_colors.1;
-        let b = self.app_colors.2;
-        let canvas = Canvas::new(Square {colors: (r,g,b)})
-        .width(Length::Fill)
-        .height(Length::Fill);
-        let button: iced::widget::Button<Message> = button("+").on_press(Message::Enlarge);
-        let row = Row::new().push(button).push(canvas);
-
-        row.into()
-    }
-
-    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
-        match message {
-            Message::Enlarge => {
-                self.app_colors.0+=0.01;
-            }
-        }
-        Command::none()
-    }
-}
-
+use eframe::{egui, epaint};
+use egui::{CentralPanel, Color32, Pos2, Rect, Rounding, Ui};
+use rand::Rng;
 fn main() {
-    MyApplication::run(iced::Settings::default()).expect("Error running application");
+    let options = eframe::NativeOptions {
+        ..Default::default()
+    };
+
+    eframe::run_native(
+        "My egui App",
+        options,
+        Box::new(|_cc| Box::new(MyApp::default())),
+    )
+}
+
+struct MyApp {
+    counter: i32,
+    r: u8,
+    g: u8,
+    b: u8,
+    cell_width: f32,
+    cell_states: Vec<bool>
+}
+
+impl Default for MyApp {
+    fn default() -> Self {
+        Self {
+            counter: 0,
+            r: 0,
+            g: 100,
+            b: 100,
+            cell_width: 20.0,
+            cell_states: vec![false; 10]
+        }
+    }
+}
+
+impl eframe::App for MyApp {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        let rounding: Rounding = Rounding {
+            nw: (0.0),
+            ne: (0.0),
+            sw: (0.0),
+            se: (0.0),
+        };
+
+       
+        let mut fill_color: Color32 = Color32::from_rgb(self.r, self.g, self.b);
+        egui::CentralPanel::default().show(ctx, |ui: &mut Ui| {
+            //ui.heading("MY egui application");
+            println!("{:?}",self.cell_states);
+            {
+                let mut counter: usize = 0;
+                while(counter < 10){
+                    let color: Color32;
+                    if(self.cell_states[counter] == true){
+                        color = Color32::WHITE;
+                    } else {
+                        color = Color32::BLACK;
+                    }
+                    let pos_a: Pos2 = Pos2 {
+                        x: (counter as f32) * self.cell_width,
+                        y: (0.0),
+                    };
+                    let pos_b: Pos2 = Pos2 {
+                        x: (pos_a.x + self.cell_width),
+                        y: (pos_a.y + self.cell_width),
+                    };
+      
+                    ui.painter()
+                    .rect_filled(Rect::from_two_pos(pos_a, pos_b), rounding, color);
+                    counter+=1;
+                }
+            }
+             /*
+            ui.painter()
+                .rect_filled(Rect::from_two_pos(pos_a, pos_b), rounding, fill_color);
+
+           
+            if ui.button("Click me").clicked() {
+                self.randomize_colors();
+                fill_color = Color32::from_rgb(self.r, self.g, self.b);
+            };
+ */         
+            if (ctx.input().pointer.any_click()) {
+                let mouse_pos: Option<Pos2> = ctx.input().pointer.hover_pos();
+                match mouse_pos {
+                    Some(pos) => {
+                        let x: f32 = pos.x;
+                        let y = pos.y;
+
+                        let mut cell_pos = (x/self.cell_width).floor() as usize;
+                        self.cell_states[cell_pos] = !self.cell_states[cell_pos];
+                        
+                    }
+
+                    None => {}
+                }
+                println!("{:?}", ctx.input().pointer.hover_pos());
+            }
+        });
+    }
+}
+
+impl MyApp {
+    fn randomize_colors(&mut self) {
+        let mut rng = rand::thread_rng();
+        self.r = rng.gen_range(0..255);
+        self.g = rng.gen_range(0..255);
+        self.b = rng.gen_range(0..255);
+    }
 }
