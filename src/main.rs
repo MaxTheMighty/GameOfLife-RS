@@ -1,8 +1,10 @@
 use eframe::{egui, epaint};
 use egui::{CentralPanel, Color32, Pos2, Rect, Rounding, Ui, Context};
 use rand::Rng;
+use std::env;
 
 fn main() {
+    env::set_var("RUST_BACKTRACE", "1");
     let options = eframe::NativeOptions {
         ..Default::default()
     };
@@ -26,10 +28,10 @@ impl Default for MyApp {
     fn default() -> Self {
         Self {
             cell_width: 20.0,
-            cell_states: vec![false; 10],
+            cell_states: vec![false; 40],
             last_window_width: 800.0,
             last_window_height: 600.0,
-            cells_across_count: 20
+            cells_across_count: 40
         }
     }
 }
@@ -41,7 +43,9 @@ impl eframe::App for MyApp {
         //check if window has been resized
         //if it has, update cells_across_count
         //if not, do not
+       
         let (current_width, current_height) = self.get_window_bounds(frame); //Perhaps unnecessary
+         /*
         let has_window_resized: bool = self.get_window_resized(current_width,current_height);
         if(has_window_resized){
             
@@ -52,8 +56,8 @@ impl eframe::App for MyApp {
             //if its more, then extend the vector. 
             //This might have to be changed, if they scale up and then down the board will be beyond the screen.
             self.extend_cell_across_if_needed();
-        }
-
+        } 
+ */
        
  
 
@@ -84,6 +88,8 @@ impl eframe::App for MyApp {
                     x_pos+=1;
                 }
             }
+            println!("{}",self.cells_across_count);
+            println!("{}",self.cell_states.len());
              /*
             ui.painter()
                 .rect_filled(Rect::from_two_pos(pos_a, pos_b), rounding, fill_color);
@@ -97,6 +103,19 @@ impl eframe::App for MyApp {
             if (ctx.input().pointer.any_click()) {
                 self.handle_click(ctx);
             }
+
+            //scroll down
+            if(ctx.input().scroll_delta.y < 0.0){
+                self.cell_width -=5.0;
+                self.cells_across_count = (current_width/self.cell_width).round() as usize;
+                self.extend_cell_across_if_needed();
+            }
+            if(ctx.input().scroll_delta.y > 0.0){
+                self.cell_width +=5.0;
+                self.cells_across_count = (current_width/self.cell_width).round() as usize;
+                self.extend_cell_across_if_needed();
+            }
+
         });
     }
 }
@@ -149,13 +168,12 @@ impl MyApp {
 
     fn extend_cell_across_if_needed(&mut self) -> bool{
         //println!("Cells across count: {}",self.cells_across_count);
-        if(self.cells_across_count > self.cell_states.len()){
+        
+        self.cell_states.resize(self.cells_across_count,false);
+        println!("[{:?}] Cells have been resized to len {}",std::time::SystemTime::now(),self.cell_states.len());
+        return true   
 
-            self.cell_states.resize(self.cells_across_count,false);
-            println!("[{:?}] Cells have been resized to len {}",std::time::SystemTime::now(),self.cell_states.len());
-            return true
-        }
-        return false
+        
     }
 
     
