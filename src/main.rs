@@ -105,7 +105,8 @@ impl eframe::App for MyApp {
             }
 
             //scroll down
-            if(ctx.input().scroll_delta.y < 0.0){
+            if(ctx.input().scroll_delta.y < 0.0 && self.cell_width > 5.0){
+
                 self.cell_width -=5.0;
                 self.cells_across_count = (current_width/self.cell_width).round() as usize;
                 self.extend_cell_across_if_needed();
@@ -170,7 +171,9 @@ impl MyApp {
         //println!("Cells across count: {}",self.cells_across_count);
         
         self.cell_states.resize(self.cells_across_count,false);
-        println!("[{:?}] Cells have been resized to len {}",std::time::SystemTime::now(),self.cell_states.len());
+
+        println!("[{:?}] Cells have been resized to len {}",std::time::SystemTime::now(),self.cell_states.capacity());
+        
         return true   
 
         
