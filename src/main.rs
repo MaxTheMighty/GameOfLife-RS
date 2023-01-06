@@ -19,8 +19,6 @@ fn main() {
 struct MyApp {
     cell_width: f32,
     cell_states: Vec<bool>,
-    last_window_width: f32,
-    last_window_height: f32,
     cells_across_count: usize
 }
 
@@ -29,8 +27,6 @@ impl Default for MyApp {
         Self {
             cell_width: 20.0,
             cell_states: vec![false; 40],
-            last_window_width: 800.0,
-            last_window_height: 600.0,
             cells_across_count: 40
         }
     }
@@ -65,6 +61,7 @@ impl eframe::App for MyApp {
         egui::CentralPanel::default().show(ctx, |ui: &mut Ui| {
             //ui.heading("MY egui application");
             //println!("{:?}",self.cell_states);
+            self.print_state();
             {
                 let mut x_pos: usize = 0;
                 while(x_pos < self.cells_across_count){
@@ -88,25 +85,14 @@ impl eframe::App for MyApp {
                     x_pos+=1;
                 }
             }
-            println!("{}",self.cells_across_count);
-            println!("{}",self.cell_states.len());
-             /*
-            ui.painter()
-                .rect_filled(Rect::from_two_pos(pos_a, pos_b), rounding, fill_color);
+            
 
-           
-            if ui.button("Click me").clicked() {
-                self.randomize_colors();
-                fill_color = Color32::from_rgb(self.r, self.g, self.b);
-            };
- */         
             if (ctx.input().pointer.any_click()) {
                 self.handle_click(ctx);
             }
 
             //scroll down
             if(ctx.input().scroll_delta.y < 0.0 && self.cell_width > 5.0){
-
                 self.cell_width -=5.0;
                 self.cells_across_count = (current_width/self.cell_width).round() as usize;
                 self.extend_cell_across_if_needed();
@@ -116,8 +102,9 @@ impl eframe::App for MyApp {
                 self.cells_across_count = (current_width/self.cell_width).round() as usize;
                 self.extend_cell_across_if_needed();
             }
-
+            
         });
+        
     }
 }
 
@@ -177,6 +164,11 @@ impl MyApp {
         return true   
 
         
+    }
+
+    fn print_state(&mut self){
+        println!("[{:?}]\nCell Width: {:?}\nCell States Length: {:?}\nCells Across length: {:?}",std::time::SystemTime::now(),self.cell_width,self.cell_states.len(),self.cells_across_count);
+
     }
 
     
