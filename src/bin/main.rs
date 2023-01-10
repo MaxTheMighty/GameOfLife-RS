@@ -1,14 +1,24 @@
 mod game_of_life;
 
-use eframe::{egui};
-use egui::{CentralPanel, Color32, Pos2, Rect, Rounding, Ui, Context,Stroke};
-use std::{env, time::Duration};
+use eframe::egui;
+use egui::{CentralPanel, Color32, Context, Pos2, Rect, Rounding, Stroke, Ui, Vec2};
+use std::{
+    env,
+    time::{Duration, Instant},
+};
 
-use grid::*;
 use game_of_life::GameOfLife;
+use grid::*;
+
+const GRID_LENGTH: usize = 100;
+const DEFAULT_WINDOW_SIZE: usize = 800;
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
     let options = eframe::NativeOptions {
+        initial_window_size: Some(Vec2::new(
+            DEFAULT_WINDOW_SIZE as f32,
+            DEFAULT_WINDOW_SIZE as f32,
+        )),
         ..Default::default()
     };
 
@@ -24,17 +34,15 @@ struct MyApp {
     game_board: GameOfLife,
     cells_across_count: usize,
     cells_down_count: usize,
-    previous_update: Duration
 }
 
 impl Default for MyApp {
     fn default() -> Self {
         Self {
-            cell_width: 20.0,
-            game_board: GameOfLife::new(40),
-            cells_across_count: 40,
-            cells_down_count: 40,
-            previous_update: Duration::ZERO
+            game_board: GameOfLife::new(GRID_LENGTH, 20),
+            cells_across_count: GRID_LENGTH,
+            cells_down_count: GRID_LENGTH,
+            cell_width: (DEFAULT_WINDOW_SIZE / GRID_LENGTH) as f32,
         }
     }
 }
@@ -42,41 +50,18 @@ impl Default for MyApp {
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         let rounding: Rounding = Rounding::none();
-        //get current window size
-        //check if window has been resized
-        //if it has, update cells_across_count
-        //if not, do not
-       
+
         let (current_width, current_height) = self.get_window_bounds(frame); //Perhaps unnecessary
-         /*
-        let has_window_resized: bool = self.get_window_resized(current_width,current_height);
-        if(has_window_resized){
-            
-            //get new cells_across_count
-            self.cells_across_count = (current_width/self.cell_width).round() as usize;
-            println!("Cells across count {}",self.cells_across_count);
-            //if this is less than previous, do nothing.
-            //if its more, then extend the vector. 
-            //This might have to be changed, if they scale up and then down the board will be beyond the screen.
-            self.extend_cell_across_if_needed();
-        } 
- */
-       
- 
-
-
-        CentralPanel::default().show(ctx, |ui: &mut Ui| {
-            //ui.heading("MY egui application");
-            //println!("{:?}",self.cell_states);
-            self.print_state();
+        let add_contents = |ui: &mut Ui| -> () {
+            //self.print_state();
             let mut y_pos: usize = 0;
             'col_loop: {
-                while (y_pos < self.cells_down_count){
-                    let mut x_pos: usize = 0; 
+                while (y_pos < self.cells_down_count) {
+                    let mut x_pos: usize = 0;
                     'row_loop: {
-                        while(x_pos < self.cells_across_count){
+                        while (x_pos < self.cells_across_count) {
                             let color: Color32;
-                            if(self.game_board.get_cell(x_pos,y_pos) == true){
+                            if (self.game_board.is_alive(x_pos, y_pos)) {
                                 color = Color32::WHITE;
                             } else {
                                 color = Color32::BLACK;
@@ -89,93 +74,69 @@ impl eframe::App for MyApp {
                                 x: (pos_a.x + self.cell_width),
                                 y: (pos_a.y + self.cell_width),
                             };
-            
-                            ui.painter()
-                            .rect_stroke(Rect::from_two_pos(pos_a, pos_b), rounding, Stroke::new(1.0,Color32::GRAY));
-                            ui.painter().rect_filled(Rect::from_two_pos(pos_a, pos_b), rounding, color);
-                            x_pos+=1;
-                        }
-                }
-                y_pos+=1;
 
+                            ui.painter().rect_stroke(
+                                Rect::from_two_pos(pos_a, pos_b),
+                                rounding,
+                                Stroke::new(1.0, Color32::GRAY),
+                            );
+                            ui.painter().rect_filled(
+                                Rect::from_two_pos(pos_a, pos_b),
+                                rounding,
+                                color,
+                            );
+                            x_pos += 1;
+                        }
+                    }
+                    y_pos += 1;
                 }
             }
+        };
 
-           
-           
-            
-        });
-        if(self.game_board.get_running()){
-
-            self.game_board.update_board();
+        CentralPanel::default().show(ctx, add_contents);
+        if self.game_board.get_running() {
+            self.game_board.update_on_interval();
         }
-        
-        if(ctx.input().key_pressed(egui::Key::Space)){
-            if(self.game_board.get_running()){
+
+        if (ctx.input().key_pressed(egui::Key::Space)) {
+            if (self.game_board.get_running()) {
                 self.game_board.stop_running();
             } else {
-                self.game_board.set_running();
+                self.game_board.start_running();
             }
         }
-
-        
 
         if (ctx.input().pointer.any_click()) {
             self.handle_click(ctx);
         }
 
-        let pixels_per_point = ctx.pixels_per_point();
-        //scroll down
-        if(ctx.input().scroll_delta.y < 0.0 && pixels_per_point > 5.0){
-            
-            self.cell_width -=5.0;
-            self.cells_across_count = (current_width/self.cell_width).round() as usize;
-            self.cells_down_count = (current_height/self.cell_width).round() as usize;
-           // self.extend_cell_across_if_needed();
-             
-
+        if (ctx.input().scroll_delta.y < 0.0) {
+            self.cell_width -= 5.0;
+            self.cells_across_count = (current_width / self.cell_width).round() as usize;
+            self.cells_down_count = (current_height / self.cell_width).round() as usize;
         }
-        if(ctx.input().scroll_delta.y > 0.0){
-            
-            self.cell_width +=5.0;
-            self.cells_across_count = (current_width/self.cell_width).round() as usize;
-            self.cells_down_count = (current_height/self.cell_width).round() as usize;
-           // self.extend_cell_across_if_needed();
-             
-            //ctx.set_pixels_per_point(pixels_per_point+3.0);
-            //ctx.request_repaint();    
+        if (ctx.input().scroll_delta.y > 0.0) {
+            self.cell_width += 5.0;
+            self.cells_across_count = (current_width / self.cell_width).round() as usize;
+            self.cells_down_count = (current_height / self.cell_width).round() as usize;
         }
-
 
         ctx.request_repaint();
-
-        
     }
 }
 
 impl MyApp {
-    /*
-    fn randomize_colors(&mut self) {
-        let mut rng = rand::thread_rng();
-        self.r = rng.gen_range(0..255);
-        self.g = rng.gen_range(0..255);
-        self.b = rng.gen_range(0..255);
-    }
-     */
-
-
-    fn handle_click(&mut self, ctx: &Context){
+    fn handle_click(&mut self, ctx: &Context) {
         let mouse_pos: Option<Pos2> = ctx.input().pointer.hover_pos();
         match mouse_pos {
             Some(pos) => {
                 let x: f32 = pos.x;
                 let y = pos.y;
 
-                let cell_x_pos = (x/self.cell_width).floor() as usize;
-                let cell_y_pos = (y/self.cell_width).floor() as usize;
-                self.game_board.invert_cell(cell_x_pos as usize, cell_y_pos as usize);
-                //self.cell_states[cell_y_pos][cell_x_pos] = !self.cell_states[cell_y_pos][cell_x_pos];
-                
+                let cell_x_pos = (x / self.cell_width).floor() as usize;
+                let cell_y_pos = (y / self.cell_width).floor() as usize;
+                self.game_board
+                    .invert_cell(cell_x_pos as usize, cell_y_pos as usize);
             }
 
             None => {}
@@ -183,65 +144,18 @@ impl MyApp {
         println!("{:?}", ctx.input().pointer.hover_pos());
     }
 
-    
-    fn get_window_bounds(&mut self, frame: &eframe::Frame) -> (f32,f32){
+    fn get_window_bounds(&mut self, frame: &eframe::Frame) -> (f32, f32) {
         let window_size = frame.info().window_info.size;
-        let (window_size_x,window_size_y) = (window_size.x,window_size.y);
-        return (window_size_x,window_size_y)
-        
+        let (window_size_x, window_size_y) = (window_size.x, window_size.y);
+        return (window_size_x, window_size_y);
     }
 
-    /*
-    fn get_window_resized(&mut self, current_width: f32, current_height: f32) -> bool{
-        let flag: bool = (current_width != self.last_window_width) || (current_height != self.last_window_height);
-        //println!("Comparing current width: {} to last width: {}", current_width,self.last_window_width);
-        if flag  {
-            self.last_window_width = current_width;
-            self.last_window_height = current_height;
-        }
-        return flag
+    fn print_state(&mut self) {
+        println!(
+            "[{:?}]\nCell Width: {:?}\nCells Across length: {:?}",
+            std::time::SystemTime::now(),
+            self.cell_width,
+            self.cells_across_count
+        );
     }
-     */
-
-     /* 
-    fn extend_cell_across_if_needed(&mut self) -> bool{
-        //println!("Cells across count: {}",self.cells_across_count);
-        let space_to_extend = self.cells_across_count.checked_sub(self.cell_states.size().0);
-        if(space_to_extend == None){
-            println!("[{:?}] New size is smaller, not extending",std::time::SystemTime::now());
-            return false;
-        }
-
-        //shadow the variable once we know its not None
-        let space_to_extend = space_to_extend.unwrap();
-        'new_row_loop: {
-            let mut new_row_loop_count: usize = 0;
-            while(new_row_loop_count < space_to_extend){
-                let new_row: Vec<bool> = vec![false; self.cell_states.cols()];
-                let new_col: Vec<bool> = vec![false; self.cell_states.rows()+1];
-                self.cell_states.push_row(new_row);
-                self.cell_states.push_col(new_col);
-                new_row_loop_count+=1;
-            }
-            println!("[{:?}] Cells have been resized to {:?}",std::time::SystemTime::now(),self.cell_states.size());
-            return true;
-        }
-
-        
-        
- 
-
-        
-    }
-*/
-   
-    fn print_state(&mut self){
-        println!("[{:?}]\nCell Width: {:?}\nCells Across length: {:?}",std::time::SystemTime::now(),self.cell_width,self.cells_across_count);
-
-    }
-
-    
-    
-
-
 }
