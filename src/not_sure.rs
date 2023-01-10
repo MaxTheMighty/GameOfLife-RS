@@ -1,11 +1,9 @@
-mod game_of_life;
-
-use eframe::{egui};
-use egui::{CentralPanel, Color32, Pos2, Rect, Rounding, Ui, Context,Stroke};
-use std::{env, time::Duration};
-
+use eframe::{egui, epaint};
+use egui::{CentralPanel, Color32, Pos2, Rect, Rounding, Ui, Context};
+use rand::Rng;
+use std::env;
 use grid::*;
-use game_of_life::GameOfLife;
+
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
     let options = eframe::NativeOptions {
@@ -21,20 +19,18 @@ fn main() {
 
 struct MyApp {
     cell_width: f32,
-    game_board: GameOfLife,
+    cell_states: Grid<bool>,
     cells_across_count: usize,
-    cells_down_count: usize,
-    previous_update: Duration
+    cells_down_count: usize
 }
 
 impl Default for MyApp {
     fn default() -> Self {
         Self {
             cell_width: 20.0,
-            game_board: GameOfLife::new(40),
+            cell_states: Grid::new(40,40),
             cells_across_count: 40,
-            cells_down_count: 40,
-            previous_update: Duration::ZERO
+            cells_down_count: 40
         }
     }
 }
@@ -65,7 +61,7 @@ impl eframe::App for MyApp {
  
 
 
-        CentralPanel::default().show(ctx, |ui: &mut Ui| {
+        egui::CentralPanel::default().show(ctx, |ui: &mut Ui| {
             //ui.heading("MY egui application");
             //println!("{:?}",self.cell_states);
             self.print_state();
@@ -76,7 +72,7 @@ impl eframe::App for MyApp {
                     'row_loop: {
                         while(x_pos < self.cells_across_count){
                             let color: Color32;
-                            if(self.game_board.get_cell(x_pos,y_pos) == true){
+                            if(self.cell_states[y_pos][x_pos] == true){
                                 color = Color32::WHITE;
                             } else {
                                 color = Color32::BLACK;
@@ -91,64 +87,44 @@ impl eframe::App for MyApp {
                             };
             
                             ui.painter()
-                            .rect_stroke(Rect::from_two_pos(pos_a, pos_b), rounding, Stroke::new(1.0,Color32::GRAY));
-                            ui.painter().rect_filled(Rect::from_two_pos(pos_a, pos_b), rounding, color);
+                            .rect_filled(Rect::from_two_pos(pos_a, pos_b), rounding, color);
                             x_pos+=1;
                         }
                 }
                 y_pos+=1;
+                
 
                 }
             }
+            
 
-           
-           
+            if (ctx.input().pointer.any_click()) {
+                self.handle_click(ctx);
+            }
+
+            //scroll down
+            if(ctx.input().scroll_delta.y < 0.0 && self.cell_width > 5.0){
+                
+                self.cell_width -=5.0;
+                self.cells_across_count = (current_width/self.cell_width).round() as usize;
+                self.cells_down_count = (current_height/self.cell_width).round() as usize;
+                self.extend_cell_across_if_needed();
+
+                //ctx.set_pixels_per_point(ctx.pixels_per_point()+10.0);
+            }
+            if(ctx.input().scroll_delta.y > 0.0){
+                
+                self.cell_width +=5.0;
+                self.cells_across_count = (current_width/self.cell_width).round() as usize;
+                self.cells_down_count = (current_height/self.cell_width).round() as usize;
+                self.extend_cell_across_if_needed();
+                
+                //ctx.set_pixels_per_point(ctx.pixels_per_point()-10.0);
+                
+            }
+            println!("Pixels per point {:?}",ctx.pixels_per_point());
             
         });
-        if(self.game_board.get_running()){
-
-            self.game_board.update_board();
-        }
-        
-        if(ctx.input().key_pressed(egui::Key::Space)){
-            if(self.game_board.get_running()){
-                self.game_board.stop_running();
-            } else {
-                self.game_board.set_running();
-            }
-        }
-
-        
-
-        if (ctx.input().pointer.any_click()) {
-            self.handle_click(ctx);
-        }
-
-        let pixels_per_point = ctx.pixels_per_point();
-        //scroll down
-        if(ctx.input().scroll_delta.y < 0.0 && pixels_per_point > 5.0){
-            
-            self.cell_width -=5.0;
-            self.cells_across_count = (current_width/self.cell_width).round() as usize;
-            self.cells_down_count = (current_height/self.cell_width).round() as usize;
-           // self.extend_cell_across_if_needed();
-             
-
-        }
-        if(ctx.input().scroll_delta.y > 0.0){
-            
-            self.cell_width +=5.0;
-            self.cells_across_count = (current_width/self.cell_width).round() as usize;
-            self.cells_down_count = (current_height/self.cell_width).round() as usize;
-           // self.extend_cell_across_if_needed();
-             
-            //ctx.set_pixels_per_point(pixels_per_point+3.0);
-            //ctx.request_repaint();    
-        }
-
-
-        ctx.request_repaint();
-
         
     }
 }
@@ -173,8 +149,7 @@ impl MyApp {
 
                 let cell_x_pos = (x/self.cell_width).floor() as usize;
                 let cell_y_pos = (y/self.cell_width).floor() as usize;
-                self.game_board.invert_cell(cell_x_pos as usize, cell_y_pos as usize);
-                //self.cell_states[cell_y_pos][cell_x_pos] = !self.cell_states[cell_y_pos][cell_x_pos];
+                self.cell_states[cell_y_pos][cell_x_pos] = !self.cell_states[cell_y_pos][cell_x_pos];
                 
             }
 
@@ -203,7 +178,6 @@ impl MyApp {
     }
      */
 
-     /* 
     fn extend_cell_across_if_needed(&mut self) -> bool{
         //println!("Cells across count: {}",self.cells_across_count);
         let space_to_extend = self.cells_across_count.checked_sub(self.cell_states.size().0);
@@ -233,10 +207,9 @@ impl MyApp {
 
         
     }
-*/
-   
+
     fn print_state(&mut self){
-        println!("[{:?}]\nCell Width: {:?}\nCells Across length: {:?}",std::time::SystemTime::now(),self.cell_width,self.cells_across_count);
+        println!("[{:?}]\nCell Width: {:?}\nCell States Length: {:?}\nCells Across length: {:?}",std::time::SystemTime::now(),self.cell_width,self.cell_states.size(),self.cells_across_count);
 
     }
 

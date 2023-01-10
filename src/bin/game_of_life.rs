@@ -1,12 +1,13 @@
 use std::fmt;
 
 
-struct GameOfLife{
+pub struct GameOfLife{
     cell_count: u32,
     bound: usize,
     board: grid::Grid<bool>,
     next_board: grid::Grid<bool>,
-    generation: u32
+    generation: u32,
+    running: bool
 
 }
 
@@ -17,17 +18,19 @@ impl GameOfLife{
             bound: 5,
             board: grid::Grid::new(5,5),
             next_board: grid::Grid::new(5,5),
-            generation: 0
+            generation: 0,
+            running: false
         }
     }
 
-    fn new(bounds: usize) -> Self {
+    pub fn new(bounds: usize) -> Self {
         Self {
             cell_count: (bounds*bounds) as u32,
             bound: bounds,
             board: grid::Grid::new(bounds,bounds),
             next_board: grid::Grid::new(bounds,bounds),
-            generation: 0
+            generation: 0,
+            running: false
         }
     }
 
@@ -55,12 +58,12 @@ impl GameOfLife{
        counter
     }
 
-    fn invert_cell(&mut self, x_pos: usize, y_pos: usize){
+    pub fn invert_cell(&mut self, x_pos: usize, y_pos: usize){
         self.board[y_pos][x_pos] = !self.board[y_pos][x_pos];
 
     }
 
-    fn get_cell(&mut self, x_pos: usize, y_pos: usize) -> bool{
+    pub fn get_cell(&mut self, x_pos: usize, y_pos: usize) -> bool{
         return self.board[y_pos][x_pos]
     }
 
@@ -81,7 +84,7 @@ impl GameOfLife{
         }
     }
 
-    fn update_board(&mut self){
+    pub fn update_board(&mut self){
         let mut neighbor_count = 0;
         let mut next_cell_state = false;
         for y_pos in 0..self.bound{
@@ -111,7 +114,7 @@ impl GameOfLife{
     }
 
 
-    fn neighbor_matrix(&self){
+    fn _neighbor_matrix(&self){
         let mut row_out: String = String::new();
         for y_pos in 0..self.bound{
             
@@ -122,6 +125,19 @@ impl GameOfLife{
             println!("{}",row_out);
             row_out.clear();
         }
+    }
+
+
+    pub fn get_running(&self) -> bool {
+        return self.running;
+    }
+
+    pub fn set_running(&mut self) {
+        self.running = true;
+    }
+
+    pub fn stop_running(&mut self) {
+        self.running = false;
     }
     
 
