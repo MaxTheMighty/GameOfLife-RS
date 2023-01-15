@@ -1,6 +1,5 @@
 use std::{
     fmt,
-    time::{Duration, Instant},
 };
 
 pub struct GameOfLife {
@@ -42,7 +41,7 @@ impl GameOfLife {
                 let neighbor_count = self.neighbor_count(x_pos, y_pos);
                 //if alive
 
-                if (self.is_alive(x_pos as usize, y_pos as usize)) {
+                if self.is_alive(x_pos as usize, y_pos as usize) {
                     next_cell_state = self.cell_lives(neighbor_count);
                 //dead
                 } else {
@@ -62,7 +61,7 @@ impl GameOfLife {
         for pair in neighbors {
             let x_pos = pair.0;
             let y_pos = pair.1;
-            if (self.is_alive(x_pos, y_pos)) {
+            if self.is_alive(x_pos, y_pos) {
                 counter += 1;
             }
         }
@@ -81,7 +80,7 @@ impl GameOfLife {
         let mut coordinates = Vec::new();
         for x_pos_offset in -1..2 {
             for y_pos_offset in -1..2 {
-                if (x_pos_offset == 0 && y_pos_offset == 0) {
+                if x_pos_offset == 0 && y_pos_offset == 0 {
                     continue;
                 }
                 let mut x_pos_neighbor = x_pos_i32 + x_pos_offset;
@@ -99,18 +98,18 @@ impl GameOfLife {
     pub fn wrap_coordinate_if_needed(&self, x_pos_in: i32, y_pos_in: i32) -> (i32, i32) {
         let mut x_pos_out: i32 = x_pos_in;
         let mut y_pos_out: i32 = y_pos_in;
-        let mut bound_as_i32: i32 = self.bound as i32;
-        if (x_pos_out < 0) {
+        let bound_as_i32: i32 = self.bound as i32;
+        if x_pos_out < 0 {
             x_pos_out += bound_as_i32;
         }
-        if (x_pos_out >= bound_as_i32) {
+        if x_pos_out >= bound_as_i32 {
             x_pos_out -= bound_as_i32;
         }
-        if (y_pos_out < 0) {
+        if y_pos_out < 0 {
             y_pos_out += bound_as_i32;
         }
 
-        if (y_pos_out >= bound_as_i32) {
+        if y_pos_out >= bound_as_i32 {
             y_pos_out -= bound_as_i32;
         }
         return (x_pos_out, y_pos_out);
@@ -125,7 +124,7 @@ impl GameOfLife {
     }
 
     pub fn cell_lives(&self, neighbor_count: u32) -> bool {
-        return (neighbor_count == 3 || neighbor_count == 2);
+        return neighbor_count == 3 || neighbor_count == 2;
     }
 
     pub fn cell_born(&self, neighbor_count: u32) -> bool {
@@ -136,7 +135,7 @@ impl GameOfLife {
         let mut row_out = String::new();
         for y_pos in 0..self.bound {
             for x_pos in 0..self.bound {
-                if (self.board[y_pos as usize][x_pos as usize] == true) {
+                if self.board[y_pos as usize][x_pos as usize] == true {
                     row_out.push('■')
                 } else {
                     row_out.push('_')

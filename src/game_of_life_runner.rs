@@ -10,6 +10,7 @@
 
 pub mod clock;
 pub mod game_of_life;
+
 use game_of_life::GameOfLife;
 use clock::Clock;
 
@@ -37,7 +38,7 @@ impl GameOfLifeRunner {
     }
 
     pub fn request_update(&mut self) {
-        if (self.clock.enough_time_passed() && self.running) {
+        if self.clock.enough_time_passed() && self.running {
             self.board.update_board();
         }
     }

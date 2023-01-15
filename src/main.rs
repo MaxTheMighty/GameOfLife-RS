@@ -3,12 +3,11 @@ use eframe::egui;
 use egui::{CentralPanel, Color32, Context, Pos2, Rect, Rounding, Stroke, Ui, Vec2};
 use std::{
     env,
-    time::{Duration, Instant},
 };
 
 
 
-use grid::*;
+
 pub mod game_of_life_runner;
 
 const GRID_LENGTH: usize = 100;
@@ -58,7 +57,7 @@ impl eframe::App for MyApp {
             for y_pos in 0..self.cells_down_count {
                 for x_pos in 0..self.cells_across_count {
                     let color: Color32;
-                    if (self.game_board.get_board().is_alive(x_pos, y_pos)) {
+                    if self.game_board.get_board().is_alive(x_pos, y_pos) {
                         color = Color32::WHITE;
                     } else {
                         color = Color32::BLACK;
@@ -86,20 +85,20 @@ impl eframe::App for MyApp {
         CentralPanel::default().show(ctx, add_contents);
         self.game_board.request_update();
 
-        if (ctx.input().key_pressed(egui::Key::Space)) {
+        if ctx.input().key_pressed(egui::Key::Space) {
             self.game_board.invert_running();
         }
 
-        if (ctx.input().pointer.any_click()) {
+        if ctx.input().pointer.any_click() {
             self.handle_click(ctx);
         }
 
-        if (ctx.input().scroll_delta.y < 0.0) {
+        if ctx.input().scroll_delta.y < 0.0 {
             self.cell_width -= 5.0;
             self.cells_across_count = (current_width / self.cell_width).round() as usize;
             self.cells_down_count = (current_height / self.cell_width).round() as usize;
         }
-        if (ctx.input().scroll_delta.y > 0.0) {
+        if ctx.input().scroll_delta.y > 0.0 {
             self.cell_width += 5.0;
             self.cells_across_count = (current_width / self.cell_width).round() as usize;
             self.cells_down_count = (current_height / self.cell_width).round() as usize;

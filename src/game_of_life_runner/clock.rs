@@ -1,6 +1,5 @@
 use std::{
-    thread,
-    time::{Duration, Instant},
+    time::{Instant},
 };
 
 pub struct Clock {
