@@ -10,8 +10,6 @@ pub struct GameOfLife {
     next_board: grid::Grid<bool>,
     generation: u32,
     running: bool,
-    update_interval: u128,
-    last_update: Instant,
 }
 
 impl GameOfLife {
@@ -23,12 +21,10 @@ impl GameOfLife {
             next_board: grid::Grid::new(5, 5),
             generation: 0,
             running: false,
-            update_interval: 200,
-            last_update: Instant::now(),
         }
     }
 
-    pub fn new(bounds: usize, update_inverval: u128) -> Self {
+    pub fn new(bounds: usize) -> Self {
         Self {
             cell_count: (bounds * bounds) as usize,
             bound: bounds,
@@ -36,8 +32,6 @@ impl GameOfLife {
             next_board: grid::Grid::new(bounds as usize, bounds as usize),
             generation: 0,
             running: false,
-            update_interval: update_inverval,
-            last_update: Instant::now(),
         }
     }
 
@@ -130,12 +124,11 @@ impl GameOfLife {
         return self.board[y_pos][x_pos];
     }
 
-    pub fn cell_lives(&self, neighbor_count: u32) -> bool{
+    pub fn cell_lives(&self, neighbor_count: u32) -> bool {
         return (neighbor_count == 3 || neighbor_count == 2);
-            
     }
 
-    pub fn cell_born(&self, neighbor_count: u32) -> bool{
+    pub fn cell_born(&self, neighbor_count: u32) -> bool {
         return neighbor_count == 3;
     }
 
@@ -175,13 +168,6 @@ impl GameOfLife {
 
     pub fn stop_running(&mut self) {
         self.running = false;
-    }
-
-    pub fn update_on_interval(&mut self) {
-        if (self.last_update.elapsed().as_millis() >= self.update_interval) {
-            self.update_board();
-            self.last_update = Instant::now();
-        }
     }
 }
 

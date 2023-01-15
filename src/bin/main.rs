@@ -1,4 +1,3 @@
-mod game_of_life;
 
 use eframe::egui;
 use egui::{CentralPanel, Color32, Context, Pos2, Rect, Rounding, Stroke, Ui, Vec2};
@@ -7,8 +6,10 @@ use std::{
     time::{Duration, Instant},
 };
 
-use game_of_life::GameOfLife;
+
+
 use grid::*;
+pub mod game_of_life_runner;
 
 const GRID_LENGTH: usize = 100;
 const DEFAULT_WINDOW_SIZE: usize = 800;
@@ -31,7 +32,7 @@ fn main() {
 
 struct MyApp {
     cell_width: f32,
-    game_board: GameOfLife,
+    game_board: game_of_life_runner::GameOfLifeRunner,
     cells_across_count: usize,
     cells_down_count: usize,
 }
@@ -39,7 +40,7 @@ struct MyApp {
 impl Default for MyApp {
     fn default() -> Self {
         Self {
-            game_board: GameOfLife::new(GRID_LENGTH, 20),
+            game_board: game_of_life_runner::GameOfLifeRunner::new(100, 20),
             cells_across_count: GRID_LENGTH,
             cells_down_count: GRID_LENGTH,
             cell_width: (DEFAULT_WINDOW_SIZE / GRID_LENGTH) as f32,
@@ -54,56 +55,39 @@ impl eframe::App for MyApp {
         let (current_width, current_height) = self.get_window_bounds(frame); //Perhaps unnecessary
         let add_contents = |ui: &mut Ui| -> () {
             //self.print_state();
-            let mut y_pos: usize = 0;
-            'col_loop: {
-                while (y_pos < self.cells_down_count) {
-                    let mut x_pos: usize = 0;
-                    'row_loop: {
-                        while (x_pos < self.cells_across_count) {
-                            let color: Color32;
-                            if (self.game_board.is_alive(x_pos, y_pos)) {
-                                color = Color32::WHITE;
-                            } else {
-                                color = Color32::BLACK;
-                            }
-                            let pos_a: Pos2 = Pos2 {
-                                x: (x_pos as f32) * self.cell_width,
-                                y: (y_pos as f32) * self.cell_width,
-                            };
-                            let pos_b: Pos2 = Pos2 {
-                                x: (pos_a.x + self.cell_width),
-                                y: (pos_a.y + self.cell_width),
-                            };
-
-                            ui.painter().rect_stroke(
-                                Rect::from_two_pos(pos_a, pos_b),
-                                rounding,
-                                Stroke::new(1.0, Color32::GRAY),
-                            );
-                            ui.painter().rect_filled(
-                                Rect::from_two_pos(pos_a, pos_b),
-                                rounding,
-                                color,
-                            );
-                            x_pos += 1;
-                        }
+            for y_pos in 0..self.cells_down_count {
+                for x_pos in 0..self.cells_across_count {
+                    let color: Color32;
+                    if (self.game_board.get_board().is_alive(x_pos, y_pos)) {
+                        color = Color32::WHITE;
+                    } else {
+                        color = Color32::BLACK;
                     }
-                    y_pos += 1;
+                    let pos_a: Pos2 = Pos2 {
+                        x: (x_pos as f32) * self.cell_width,
+                        y: (y_pos as f32) * self.cell_width,
+                    };
+                    let pos_b: Pos2 = Pos2 {
+                        x: (pos_a.x + self.cell_width),
+                        y: (pos_a.y + self.cell_width),
+                    };
+
+                    ui.painter().rect_stroke(
+                        Rect::from_two_pos(pos_a, pos_b),
+                        rounding,
+                        Stroke::new(1.0, Color32::GRAY),
+                    );
+                    ui.painter()
+                        .rect_filled(Rect::from_two_pos(pos_a, pos_b), rounding, color);
                 }
             }
         };
 
         CentralPanel::default().show(ctx, add_contents);
-        if self.game_board.get_running() {
-            self.game_board.update_on_interval();
-        }
+        self.game_board.request_update();
 
         if (ctx.input().key_pressed(egui::Key::Space)) {
-            if (self.game_board.get_running()) {
-                self.game_board.stop_running();
-            } else {
-                self.game_board.start_running();
-            }
+            self.game_board.invert_running();
         }
 
         if (ctx.input().pointer.any_click()) {
@@ -136,9 +120,9 @@ impl MyApp {
                 let cell_x_pos = (x / self.cell_width).floor() as usize;
                 let cell_y_pos = (y / self.cell_width).floor() as usize;
                 self.game_board
+                    .get_board()
                     .invert_cell(cell_x_pos as usize, cell_y_pos as usize);
             }
-
             None => {}
         }
         println!("{:?}", ctx.input().pointer.hover_pos());
