@@ -8,13 +8,6 @@ pub struct Clock {
 }
 
 impl Clock {
-    fn default() -> Self {
-        Self {
-            ms_update_interval: 200,
-            last_update: Instant::now(),
-        }
-    }
-
     pub fn new(ms_update_interval_in: u128) -> Self {
         Self {
             ms_update_interval: ms_update_interval_in,
@@ -39,14 +32,4 @@ impl Clock {
     }
 }
 
-fn main() {
-    /*
-    let mut clock_tester: Clock = Clock::new(5000);
 
-
-    for x in 1..15{
-        thread::sleep(Duration::from_secs(1));
-        println!("{:?}",clock_tester.update_on_interval());
-    }
-    */
-}

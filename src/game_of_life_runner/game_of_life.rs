@@ -3,7 +3,6 @@ use std::{
 };
 
 pub struct GameOfLife {
-    cell_count: usize,
     bound: usize,
     board: grid::Grid<bool>,
     next_board: grid::Grid<bool>,
@@ -12,20 +11,8 @@ pub struct GameOfLife {
 }
 
 impl GameOfLife {
-    fn default() -> Self {
-        Self {
-            cell_count: 25,
-            bound: 5,
-            board: grid::Grid::new(5, 5),
-            next_board: grid::Grid::new(5, 5),
-            generation: 0,
-            running: false,
-        }
-    }
-
     pub fn new(bounds: usize) -> Self {
         Self {
-            cell_count: (bounds * bounds) as usize,
             bound: bounds,
             board: grid::Grid::new(bounds as usize, bounds as usize),
             next_board: grid::Grid::new(bounds as usize, bounds as usize),
@@ -35,7 +22,7 @@ impl GameOfLife {
     }
 
     pub fn update_board(&mut self) {
-        let mut next_cell_state = false;
+        let mut next_cell_state;
         for y_pos in 0..self.bound {
             for x_pos in 0..self.bound {
                 let neighbor_count = self.neighbor_count(x_pos, y_pos);
@@ -180,4 +167,4 @@ impl fmt::Debug for GameOfLife {
     }
 }
 
-fn main() {}
+

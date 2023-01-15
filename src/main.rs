@@ -133,7 +133,7 @@ impl MyApp {
         return (window_size_x, window_size_y);
     }
 
-    fn print_state(&mut self) {
+    fn _print_state(&mut self) {
         println!(
             "[{:?}]\nCell Width: {:?}\nCells Across length: {:?}",
             std::time::SystemTime::now(),

@@ -64,7 +64,8 @@ impl GameOfLifeRunner {
     }
 }
 
-fn main() {
+
+fn _main() {
     let mut runner: GameOfLifeRunner = GameOfLifeRunner::default();
     runner.board.print();
     runner.request_update();
