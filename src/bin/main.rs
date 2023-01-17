@@ -10,10 +10,10 @@ use std::{
 
 pub mod game_of_life_runner;
 
-const GRID_LENGTH: usize = 100;
-const DEFAULT_WINDOW_SIZE: usize = 800;
+const GRID_LENGTH: usize = 200;
+const DEFAULT_WINDOW_SIZE: usize = 1000;
 fn main() {
-    env::set_var("RUST_BACKTRACE", "1");
+    env::set_var("RUST_BACKTRACE", "FULL");
     let options = eframe::NativeOptions {
         initial_window_size: Some(Vec2::new(
             DEFAULT_WINDOW_SIZE as f32,
@@ -39,7 +39,7 @@ struct MyApp {
 impl Default for MyApp {
     fn default() -> Self {
         Self {
-            game_board: game_of_life_runner::GameOfLifeRunner::new(100, 20),
+            game_board: game_of_life_runner::GameOfLifeRunner::new(GRID_LENGTH, 20),
             cells_across_count: GRID_LENGTH,
             cells_down_count: GRID_LENGTH,
             cell_width: (DEFAULT_WINDOW_SIZE / GRID_LENGTH) as f32,

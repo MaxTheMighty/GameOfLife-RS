@@ -2,6 +2,8 @@ use std::{
     fmt,
 };
 
+
+
 pub struct GameOfLife {
     bound: usize,
     board: grid::Grid<bool>,
