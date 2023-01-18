@@ -13,9 +13,17 @@ egui = "0.20.1"
 rand = "0.8.5"
 libmath = "0.2.1"
 env_logger = "0.10.0"
+firestorm = { version="0.4", features=["enable_system_time"] }
 
 [features]
 
 [profile.dev]
 opt-level = 0  # Controls the --opt-level the compiler builds with
 debug = true   # Controls whether the compiler passes `-g`
+
+[profile.release]
+debug = true
+
+
+
+

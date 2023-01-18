@@ -1,7 +1,11 @@
 use std::{
     fmt,
 };
-
+pub(crate) use firestorm::{
+    profile_fn,
+    profile_method,
+    profile_section
+};
 
 
 pub struct GameOfLife {
@@ -22,42 +26,80 @@ impl GameOfLife {
             running: false,
         }
     }
-
+    
     pub fn update_board(&mut self) {
+        
         let mut next_cell_state;
         for y_pos in 0..self.bound {
             for x_pos in 0..self.bound {
                 let neighbor_count = self.neighbor_count(x_pos, y_pos);
-                //if alive
 
-                if self.is_alive(x_pos as usize, y_pos as usize) {
+
+                if self.is_alive(x_pos, y_pos) {
                     next_cell_state = self.cell_lives(neighbor_count);
-                //dead
+
                 } else {
                     next_cell_state = self.cell_born(neighbor_count);
                 }
 
-                self.next_board[y_pos as usize][x_pos as usize] = next_cell_state;
+                self.next_board[y_pos][x_pos] = next_cell_state;
             }
         }
         self.board = self.next_board.clone();
     }
 
     fn neighbor_count(&self, x_pos_in: usize, y_pos_in: usize) -> u32 {
+        
         let mut counter: u32 = 0;
-        let neighbors: Vec<(usize, usize)> = self.generate_neighbor_indexes(x_pos_in, y_pos_in);
-
+        let bound_as_i32 = self.bound as i32;
+        //let neighbors = self.generate_neighbor_indexes(x_pos_in, y_pos_in);
+        /*
         for pair in neighbors {
             let x_pos = pair.0;
             let y_pos = pair.1;
             if self.is_alive(x_pos, y_pos) {
                 counter += 1;
+
+            }
+             */
+        
+        for x_pos_offset in -1..2{
+            for y_pos_offset in -1..2 {
+                if x_pos_offset == 0 && y_pos_offset == 0 {
+                    continue;
+                }
+
+                let mut x_pos_neighbor = x_pos_in as i32 + x_pos_offset;
+                let mut y_pos_neighbor = y_pos_in as i32 + y_pos_offset;
+                if x_pos_neighbor < 0 {
+                    x_pos_neighbor += bound_as_i32;
+                }
+
+                if x_pos_neighbor >= bound_as_i32 {
+                    x_pos_neighbor -= bound_as_i32;
+                }
+                if y_pos_neighbor < 0 {
+                    y_pos_neighbor += bound_as_i32;
+                }
+        
+                if y_pos_neighbor >= bound_as_i32{
+                    y_pos_neighbor -= bound_as_i32;
+                }
+               if self.is_alive_i32(x_pos_neighbor, y_pos_neighbor) {
+                 counter+=1;
+               } 
+                
             }
         }
+        
+        
 
-        counter
+
+
+    
+        return counter;
     }
-
+    
     pub fn generate_neighbor_indexes(
         &self,
         x_pos_in: usize,
@@ -67,6 +109,9 @@ impl GameOfLife {
         let x_pos_i32 = x_pos_in as i32;
         let y_pos_i32 = y_pos_in as i32;
         let mut coordinates = Vec::new();
+
+        
+        
         for x_pos_offset in -1..2 {
             for y_pos_offset in -1..2 {
                 if x_pos_offset == 0 && y_pos_offset == 0 {
@@ -80,10 +125,13 @@ impl GameOfLife {
                 coordinates.push((x_pos_neighbor as usize, y_pos_neighbor as usize));
             }
         }
+         
 
         return coordinates;
     }
+    
 
+    
     pub fn wrap_coordinate_if_needed(&self, x_pos_in: i32, y_pos_in: i32) -> (i32, i32) {
         let mut x_pos_out: i32 = x_pos_in;
         let mut y_pos_out: i32 = y_pos_in;
@@ -103,7 +151,7 @@ impl GameOfLife {
         }
         return (x_pos_out, y_pos_out);
     }
-
+ 
     pub fn invert_cell(&mut self, x_pos: usize, y_pos: usize) {
         self.board[y_pos][x_pos] = !self.board[y_pos][x_pos];
     }
@@ -118,6 +166,10 @@ impl GameOfLife {
 
     pub fn cell_born(&self, neighbor_count: u32) -> bool {
         return neighbor_count == 3;
+    }
+
+    pub fn is_alive_i32(&self, x_pos: i32, y_pos: i32) -> bool{
+        return self.board[y_pos as usize][x_pos as usize];
     }
 
     pub fn print(&self) {
@@ -168,5 +220,7 @@ impl fmt::Debug for GameOfLife {
             .finish()
     }
 }
+
+
 
 
