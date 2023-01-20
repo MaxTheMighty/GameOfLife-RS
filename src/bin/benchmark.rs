@@ -3,8 +3,8 @@ pub mod game_of_life_runner;
 
 use std::time::{Duration, Instant};
 
-use game_of_life_runner::game_of_life::GameOfLife;
-const board_size: usize = 100;
+use game_of_life_runner::GameOfLifeRunner;
+const board_size: usize = 10000;
 fn main() {
    
     
@@ -24,15 +24,15 @@ fn main() {
 }
 
 fn update_50_times(){
-    let mut board = game_of_life_runner::game_of_life::GameOfLife::new(board_size); 
+    let mut board = GameOfLifeRunner::new(board_size,0);
     
-    board.invert_cell(5,5);
-    board.invert_cell(5,6);
-    board.invert_cell(4,6);
-    board.invert_cell(5,7);
-    board.invert_cell(6,5);
+    board.get_board().invert_cell(5,5);
+    board.get_board().invert_cell(5,6);
+    board.get_board().invert_cell(4,6);
+    board.get_board().invert_cell(5,7);
+    board.get_board().invert_cell(6,5);
     for _ in 1..50{
-        board.update_board();
+        board.update();
     }
 }
 

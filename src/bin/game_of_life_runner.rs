@@ -13,11 +13,14 @@ pub mod game_of_life;
 
 use game_of_life::GameOfLife;
 use clock::Clock;
+use grid::Grid;
+use rayon::prelude::*;
 
 pub struct GameOfLifeRunner {
     board: game_of_life::GameOfLife,
     clock: clock::Clock,
     running: bool,
+    next_board_vec: Vec<bool>
 }
 
 impl GameOfLifeRunner {
@@ -26,6 +29,7 @@ impl GameOfLifeRunner {
             board:GameOfLife::new(50),
             clock: Clock::new(200),
             running: false,
+            next_board_vec: Grid::new(50,50).into_vec()
         }
     }
 
@@ -34,13 +38,30 @@ impl GameOfLifeRunner {
             board: GameOfLife::new(game_of_life_bounds),
             clock: Clock::new(update_interval),
             running: false,
+            next_board_vec: Grid::new(game_of_life_bounds,game_of_life_bounds).into_vec()
         }
     }
 
     pub fn request_update(&mut self) {
         if self.clock.enough_time_passed() && self.running {
-            self.board.update_board();
+            //self.update_board();
         }
+    }
+
+    pub fn update(&mut self){
+        let row_count = self.board.grid.rows();
+        let col_count = self.board.grid.cols();
+        
+        self.next_board_vec.par_iter_mut().enumerate().for_each(|(index,cell)|{
+            let(x,y) = (index%self.board.bound,index/self.board.bound); 
+            let neighbor_count = self.board.neighbor_count(x, y);
+            if(self.board.is_alive(x, y)){
+                *cell = self.board.cell_lives(neighbor_count);
+            } else {
+                *cell = self.board.cell_born(neighbor_count);
+            }
+
+        });
     }
 
     pub fn stop_running(&mut self) {

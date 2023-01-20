@@ -1,5 +1,10 @@
 use std::{
-    fmt,
+    fmt, sync, thread
+};
+
+
+use sync::{
+    Mutex, Arc
 };
 pub(crate) use firestorm::{
     profile_fn,
@@ -9,9 +14,9 @@ pub(crate) use firestorm::{
 
 
 pub struct GameOfLife {
-    bound: usize,
-    board: grid::Grid<bool>,
-    next_board: grid::Grid<bool>,
+    pub bound: usize,
+    pub grid: grid::Grid<bool>,
+    next_grid: grid::Grid<bool>,
     generation: u32,
     running: bool,
 }
@@ -20,15 +25,15 @@ impl GameOfLife {
     pub fn new(bounds: usize) -> Self {
         Self {
             bound: bounds,
-            board: grid::Grid::new(bounds as usize, bounds as usize),
-            next_board: grid::Grid::new(bounds as usize, bounds as usize),
+            grid: grid::Grid::new(bounds as usize, bounds as usize),
+            next_grid: grid::Grid::new(bounds as usize, bounds as usize),
             generation: 0,
             running: false,
         }
     }
-    
-    pub fn update_board(&mut self) {
-        
+   
+    /* 
+    pub fn update_grid(&mut self) {
         let mut next_cell_state;
         for y_pos in 0..self.bound {
             for x_pos in 0..self.bound {
@@ -42,13 +47,14 @@ impl GameOfLife {
                     next_cell_state = self.cell_born(neighbor_count);
                 }
 
-                self.next_board[y_pos][x_pos] = next_cell_state;
+                self.next_grid[y_pos][x_pos] = next_cell_state;
             }
         }
-        self.board = self.next_board.clone();
+        self.grid = self.next_grid.clone();
     }
+    */
 
-    fn neighbor_count(&self, x_pos_in: usize, y_pos_in: usize) -> u32 {
+    pub fn neighbor_count(&self, x_pos_in: usize, y_pos_in: usize) -> u32 {
         
         let mut counter: u32 = 0;
         let bound_as_i32 = self.bound as i32;
@@ -153,11 +159,11 @@ impl GameOfLife {
     }
  
     pub fn invert_cell(&mut self, x_pos: usize, y_pos: usize) {
-        self.board[y_pos][x_pos] = !self.board[y_pos][x_pos];
+        self.grid[y_pos][x_pos] = !self.grid[y_pos][x_pos];
     }
 
     pub fn is_alive(&self, x_pos: usize, y_pos: usize) -> bool {
-        return self.board[y_pos][x_pos];
+        return self.grid[y_pos][x_pos];
     }
 
     pub fn cell_lives(&self, neighbor_count: u32) -> bool {
@@ -169,14 +175,18 @@ impl GameOfLife {
     }
 
     pub fn is_alive_i32(&self, x_pos: i32, y_pos: i32) -> bool{
-        return self.board[y_pos as usize][x_pos as usize];
+        return self.grid[y_pos as usize][x_pos as usize];
+    }
+
+    pub fn get_grid(&mut self) -> &mut grid::Grid<bool>{
+        return & mut self.grid;
     }
 
     pub fn print(&self) {
         let mut row_out = String::new();
         for y_pos in 0..self.bound {
             for x_pos in 0..self.bound {
-                if self.board[y_pos as usize][x_pos as usize] == true {
+                if self.grid[y_pos as usize][x_pos as usize] == true {
                     row_out.push('■')
                 } else {
                     row_out.push('_')
@@ -209,14 +219,18 @@ impl GameOfLife {
     pub fn stop_running(&mut self) {
         self.running = false;
     }
+
+    pub fn set_cell(&mut self, x_pos: usize,y_pos: usize, state:bool){
+        self.grid[y_pos][x_pos] = state;
+    }
 }
 
 impl fmt::Debug for GameOfLife {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Game of life board")
+        f.debug_struct("Game of life grid")
             .field("Generation", &self.generation)
             .field("Bounds", &self.bound)
-            .field("Board", &self.board)
+            .field("grid", &self.grid)
             .finish()
     }
 }
