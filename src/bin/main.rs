@@ -1,12 +1,6 @@
-
 use eframe::egui;
-use egui::{CentralPanel, Color32, Context, Pos2, Rect, Rounding, Stroke, Ui, Vec2};
-use std::{
-    env,
-};
-
-
-
+use egui::{CentralPanel, Color32, Context, Pos2, Rect, Rounding, Stroke, Ui, Vec2, SidePanel};
+use std::env;
 
 pub mod game_of_life_runner;
 
@@ -52,7 +46,7 @@ impl eframe::App for MyApp {
         let rounding: Rounding = Rounding::none();
 
         let (current_width, current_height) = self.get_window_bounds(frame); //Perhaps unnecessary
-        let add_contents = |ui: &mut Ui| -> () {
+        let central_panel = |ui: &mut Ui| -> () {
             //self.print_state();
             for y_pos in 0..self.cells_down_count {
                 for x_pos in 0..self.cells_across_count {
@@ -82,7 +76,11 @@ impl eframe::App for MyApp {
             }
         };
 
-        CentralPanel::default().show(ctx, add_contents);
+        let side_panel = |ui: &mut Ui| -> (){
+            ui.add(egui::Button::new("Button"));
+        };
+        CentralPanel::default().show(ctx, central_panel);
+        SidePanel::left("Left Panel").show(ctx,side_panel);
         self.game_board.request_update();
 
         if ctx.input().key_pressed(egui::Key::Space) {

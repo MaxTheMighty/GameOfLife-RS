@@ -1,6 +1,4 @@
-use std::{
-    time::{Instant},
-};
+use std::time::Instant;
 
 pub struct Clock {
     ms_update_interval: u128,
@@ -31,5 +29,3 @@ impl Clock {
         return self.last_update.elapsed().as_millis() >= self.ms_update_interval;
     }
 }
-
-

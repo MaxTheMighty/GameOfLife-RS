@@ -6,30 +6,29 @@
 *
  */
 
-
-
 pub mod clock;
 pub mod game_of_life;
 
-use game_of_life::GameOfLife;
 use clock::Clock;
-use grid::Grid;
+use game_of_life::GameOfLife;
 use rayon::prelude::*;
 
 pub struct GameOfLifeRunner {
     board: game_of_life::GameOfLife,
     clock: clock::Clock,
     running: bool,
-    next_board_vec: Vec<bool>
+    next_board_vec: Vec<bool>,
+    multithreading: bool,
 }
 
 impl GameOfLifeRunner {
     pub fn default() -> Self {
         Self {
-            board:GameOfLife::new(50),
+            board: GameOfLife::new(50),
             clock: Clock::new(200),
             running: false,
-            next_board_vec: Grid::new(50,50).into_vec()
+            next_board_vec: vec![false; 2500],
+            multithreading: true,
         }
     }
 
@@ -38,30 +37,51 @@ impl GameOfLifeRunner {
             board: GameOfLife::new(game_of_life_bounds),
             clock: Clock::new(update_interval),
             running: false,
-            next_board_vec: Grid::new(game_of_life_bounds,game_of_life_bounds).into_vec()
+            next_board_vec: vec![false; game_of_life_bounds * game_of_life_bounds],
+            multithreading: false,
         }
     }
 
     pub fn request_update(&mut self) {
         if self.clock.enough_time_passed() && self.running {
-            //self.update_board();
+            if (self.multithreading) {
+                self.update_rayon();
+            } else {
+                self.update();
+            }
         }
     }
 
-    pub fn update(&mut self){
-        let row_count = self.board.grid.rows();
-        let col_count = self.board.grid.cols();
-        
-        self.next_board_vec.par_iter_mut().enumerate().for_each(|(index,cell)|{
-            let(x,y) = (index%self.board.bound,index/self.board.bound); 
-            let neighbor_count = self.board.neighbor_count(x, y);
-            if(self.board.is_alive(x, y)){
-                *cell = self.board.cell_lives(neighbor_count);
-            } else {
-                *cell = self.board.cell_born(neighbor_count);
-            }
+    pub fn update_rayon(&mut self) {
+        self.next_board_vec
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(index, cell)| {
+                let (x, y) = (index % self.board.bounds, index / self.board.bounds);
+                let neighbor_count = self.board.neighbor_count(x, y);
+                if (self.board.is_alive(x, y)) {
+                    *cell = self.board.cell_lives(neighbor_count);
+                } else {
+                    *cell = self.board.cell_born(neighbor_count);
+                }
+            });
+        self.board.grid = self.next_board_vec.clone();
+    }
 
-        });
+    pub fn update(&mut self) {
+        self.next_board_vec
+            .iter_mut()
+            .enumerate()
+            .for_each(|(index, cell)| {
+                let (x, y) = (index % self.board.bounds, index / self.board.bounds);
+                let neighbor_count = self.board.neighbor_count(x, y);
+                if (self.board.is_alive(x, y)) {
+                    *cell = self.board.cell_lives(neighbor_count);
+                } else {
+                    *cell = self.board.cell_born(neighbor_count);
+                }
+            });
+        self.board.grid = self.next_board_vec.clone();
     }
 
     pub fn stop_running(&mut self) {
@@ -83,12 +103,15 @@ impl GameOfLifeRunner {
     pub fn get_board(&mut self) -> &mut GameOfLife {
         return &mut self.board;
     }
+
+    pub fn set_multithreading(&mut self, value: bool) {
+        self.multithreading = value;
+    }
+}
+
+fn main(){
+
 }
 
 
-fn _main() {
-    let mut runner: GameOfLifeRunner = GameOfLifeRunner::default();
-    runner.board.print();
-    runner.request_update();
-    runner.board.print()
-}
+
