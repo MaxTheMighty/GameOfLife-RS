@@ -84,6 +84,10 @@ impl GameOfLifeRunner {
         self.board.grid = self.next_board_vec.clone();
     }
 
+    pub fn clear(&mut self){
+        self.board.grid.fill(false);
+    }
+
     pub fn stop_running(&mut self) {
         self.running = false;
     }
@@ -107,6 +111,8 @@ impl GameOfLifeRunner {
     pub fn set_multithreading(&mut self, value: bool) {
         self.multithreading = value;
     }
+
+    
 }
 
 fn main(){
