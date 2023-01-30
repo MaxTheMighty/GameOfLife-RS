@@ -2,8 +2,42 @@ use grid::Grid;
 use rayon::prelude::*;
 use std::time::Instant;
 use native_dialog::{FileDialog, MessageDialog, MessageType};
+use std::env;
+use std::fs;
+use graphics::file_parser::FileParser;
+
 const GRID_SIZE: usize = 50000;
 fn main() {
+
+    let path = FileDialog::new()
+    .set_location("~/Desktop")
+    .add_filter("Text file", &["txt"])
+
+    .show_open_single_file()
+    .unwrap();
+
+    let path = match path {
+        Some(path) => path,
+        None => return,
+    };
+
+
+//    let path = "G:\\Rust\\GameOfLife-RS\\test_file.txt";
+    let parser: FileParser = FileParser::build(path).expect("Error building file parser");
+    parser.fill_grid();
+    /*
+    let contents = fs::read_to_string(path).expect("Error reading file");
+    let rows = contents.split('\n');
+
+    for row in rows{
+        for char in row.chars(){
+            println!("{}",char);
+        }
+    }
+ */
+
+
+    /* 
     let path = FileDialog::new()
         .set_location("~/Desktop")
         .add_filter("PNG Image", &["png"])
@@ -15,7 +49,9 @@ fn main() {
         Some(path) => path,
         None => return,
     };
+    */
 
+    /* 
     let yes = MessageDialog::new()
         .set_type(MessageType::Info)
         .set_title("Do you want to open the file?")
@@ -26,6 +62,8 @@ fn main() {
     if yes {
         println!("{:?}",path);
     }
+    */
+     
 }
 /*
 fn main() {

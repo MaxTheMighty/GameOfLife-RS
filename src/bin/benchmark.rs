@@ -1,9 +1,9 @@
-pub mod game_of_life_runner;
+
 
 use std::env;
 use std::time::{Duration, Instant};
 
-use game_of_life_runner::game_of_life::GameOfLife;
+use graphics::GameOfLifeRunner;
 const BOARD_SIZE: usize = 10000;
 fn main() {
    
@@ -17,7 +17,7 @@ fn main() {
 }
 
 fn update_50_times() {
-    let mut board = game_of_life_runner::GameOfLifeRunner::new(BOARD_SIZE, 50);
+    let mut board = GameOfLifeRunner::new(BOARD_SIZE, 50);
 
     board.get_board().invert_cell(5, 5);
     board.get_board().invert_cell(5, 6);
@@ -30,7 +30,7 @@ fn update_50_times() {
 }
 
 fn print_test() {
-    let mut board = game_of_life_runner::GameOfLifeRunner::new(BOARD_SIZE, 50);
+    let mut board = GameOfLifeRunner::new(BOARD_SIZE, 50);
     board.get_board().invert_cell(5, 5);
     board.get_board().invert_cell(5, 6);
     board.get_board().invert_cell(4, 6);

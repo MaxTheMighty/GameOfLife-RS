@@ -8,11 +8,10 @@
 
 pub mod clock;
 pub mod game_of_life;
-
+pub mod file_parser;
 use clock::Clock;
 use game_of_life::GameOfLife;
 use rayon::prelude::*;
-
 pub struct GameOfLifeRunner {
     board: game_of_life::GameOfLife,
     clock: clock::Clock,

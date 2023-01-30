@@ -3,13 +3,12 @@ use egui::{CentralPanel, Color32, Context, Pos2, Rect, Rounding, Stroke, Ui, Vec
 use native_dialog::{FileDialog};
 use std::{env, path::PathBuf};
 
-pub mod game_of_life_runner;
-
 const GRID_LENGTH: usize = 200;
 const SIDE_PANEL_WIDTH: f32 = 110.0;
 const DEFAULT_WINDOW_SIZE: f32 = 1000.0;
 const ENTIRE_UI_SIZE_X: f32 = SIDE_PANEL_WIDTH + DEFAULT_WINDOW_SIZE;
 const ENTIRE_UI_SIZE_Y: f32 = DEFAULT_WINDOW_SIZE;
+use graphics::GameOfLifeRunner;
 fn main() {
     env::set_var("RUST_BACKTRACE", "FULL");
     let options = eframe::NativeOptions {
@@ -29,7 +28,7 @@ fn main() {
 
 struct MyApp {
     cell_width: f32,
-    game_board: game_of_life_runner::GameOfLifeRunner,
+    game_board: GameOfLifeRunner,
     cells_across_count: usize,
     cells_down_count: usize,
 }
@@ -37,7 +36,7 @@ struct MyApp {
 impl Default for MyApp {
     fn default() -> Self {
         Self {
-            game_board: game_of_life_runner::GameOfLifeRunner::new(GRID_LENGTH, 10),
+            game_board: GameOfLifeRunner::new(GRID_LENGTH, 10),
             cells_across_count: GRID_LENGTH,
             cells_down_count: GRID_LENGTH,
             cell_width: (DEFAULT_WINDOW_SIZE / GRID_LENGTH as f32)
