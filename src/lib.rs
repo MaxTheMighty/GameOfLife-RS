@@ -37,7 +37,7 @@ impl GameOfLifeRunner {
             clock: Clock::new(update_interval),
             running: false,
             next_board_vec: vec![false; game_of_life_bounds * game_of_life_bounds],
-            multithreading: false,
+            multithreading: true,
         }
     }
 

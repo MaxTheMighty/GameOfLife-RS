@@ -1,18 +1,20 @@
+use graphics::GameOfLifeRunner;
+use graphics::game_of_life::GameOfLife;
 use grid::Grid;
 use rayon::prelude::*;
 use std::time::Instant;
 use native_dialog::{FileDialog, MessageDialog, MessageType};
 use std::env;
 use std::fs;
+use std::path;
+
 use graphics::file_parser::FileParser;
 
 const GRID_SIZE: usize = 50000;
 fn main() {
 
     let path = FileDialog::new()
-    .set_location("~/Desktop")
     .add_filter("Text file", &["txt"])
-
     .show_open_single_file()
     .unwrap();
 
@@ -23,8 +25,15 @@ fn main() {
 
 
 //    let path = "G:\\Rust\\GameOfLife-RS\\test_file.txt";
-    let parser: FileParser = FileParser::build(path).expect("Error building file parser");
-    parser.fill_grid();
+    let mut board: GameOfLifeRunner = GameOfLifeRunner::new(20, 100);
+    let mut parser: FileParser = FileParser::create_empty();
+    parser.set_file(path);
+    let fill_result = parser.fill_grid(board.get_board());
+    match fill_result {
+        Ok(()) => println!("Reading file functional!"),
+        Err(err) => panic!("{:?}",err)
+    }
+    board.get_board().print();
     /*
     let contents = fs::read_to_string(path).expect("Error reading file");
     let rows = contents.split('\n');

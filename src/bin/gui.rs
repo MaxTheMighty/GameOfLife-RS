@@ -2,13 +2,14 @@ use eframe::egui;
 use egui::{CentralPanel, Color32, Context, Pos2, Rect, Rounding, Stroke, Ui, Vec2, SidePanel};
 use native_dialog::{FileDialog};
 use std::{env, path::PathBuf};
+use graphics::{GameOfLifeRunner, file_parser::FileParser};
 
 const GRID_LENGTH: usize = 200;
 const SIDE_PANEL_WIDTH: f32 = 110.0;
 const DEFAULT_WINDOW_SIZE: f32 = 1000.0;
 const ENTIRE_UI_SIZE_X: f32 = SIDE_PANEL_WIDTH + DEFAULT_WINDOW_SIZE;
 const ENTIRE_UI_SIZE_Y: f32 = DEFAULT_WINDOW_SIZE;
-use graphics::GameOfLifeRunner;
+
 fn main() {
     env::set_var("RUST_BACKTRACE", "FULL");
     let options = eframe::NativeOptions {
@@ -31,6 +32,7 @@ struct MyApp {
     game_board: GameOfLifeRunner,
     cells_across_count: usize,
     cells_down_count: usize,
+    file_parser: FileParser
 }
 
 impl Default for MyApp {
@@ -39,7 +41,8 @@ impl Default for MyApp {
             game_board: GameOfLifeRunner::new(GRID_LENGTH, 10),
             cells_across_count: GRID_LENGTH,
             cells_down_count: GRID_LENGTH,
-            cell_width: (DEFAULT_WINDOW_SIZE / GRID_LENGTH as f32)
+            cell_width: (DEFAULT_WINDOW_SIZE / GRID_LENGTH as f32),
+            file_parser: FileParser::create_empty()//this is very bad 
         }
     }
 }
@@ -67,10 +70,9 @@ impl eframe::App for MyApp {
                 Some(path_valid) => path = path_valid,
                 None => {println!("Invalid file"); return},
                }
-            
-               //parser: FileParser = FileParser::build(path);
-               println!("{:?}",path)
-
+               println!("{:?}",path);
+               self.file_parser.set_file(path);
+               self.file_parser.fill_grid(self.game_board.get_board());
 
 
             }  
