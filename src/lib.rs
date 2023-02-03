@@ -7,8 +7,8 @@
  */
 
 pub mod clock;
-pub mod game_of_life;
 pub mod file_parser;
+pub mod game_of_life;
 use clock::Clock;
 use game_of_life::GameOfLife;
 use rayon::prelude::*;
@@ -83,7 +83,7 @@ impl GameOfLifeRunner {
         self.board.grid = self.next_board_vec.clone();
     }
 
-    pub fn clear(&mut self){
+    pub fn clear(&mut self) {
         self.board.grid.fill(false);
     }
 
@@ -110,13 +110,6 @@ impl GameOfLifeRunner {
     pub fn set_multithreading(&mut self, value: bool) {
         self.multithreading = value;
     }
-
-    
 }
 
-fn main(){
-
-}
-
-
-
+fn main() {}

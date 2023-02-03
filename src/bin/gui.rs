@@ -1,8 +1,8 @@
 use eframe::egui;
-use egui::{CentralPanel, Color32, Context, Pos2, Rect, Rounding, Stroke, Ui, Vec2, SidePanel};
-use native_dialog::{FileDialog};
+use egui::{CentralPanel, Color32, Context, Pos2, Rect, Rounding, SidePanel, Stroke, Ui, Vec2};
+use graphics::{file_parser::FileParser, GameOfLifeRunner};
+use native_dialog::FileDialog;
 use std::{env, path::PathBuf};
-use graphics::{GameOfLifeRunner, file_parser::FileParser};
 
 const GRID_LENGTH: usize = 200;
 const SIDE_PANEL_WIDTH: f32 = 110.0;
@@ -13,10 +13,7 @@ const ENTIRE_UI_SIZE_Y: f32 = DEFAULT_WINDOW_SIZE;
 fn main() {
     env::set_var("RUST_BACKTRACE", "FULL");
     let options = eframe::NativeOptions {
-        initial_window_size: Some(Vec2::new(
-            ENTIRE_UI_SIZE_X,
-            ENTIRE_UI_SIZE_Y
-        )),
+        initial_window_size: Some(Vec2::new(ENTIRE_UI_SIZE_X, ENTIRE_UI_SIZE_Y)),
         ..Default::default()
     };
 
@@ -32,7 +29,7 @@ struct MyApp {
     game_board: GameOfLifeRunner,
     cells_across_count: usize,
     cells_down_count: usize,
-    file_parser: FileParser
+    file_parser: FileParser,
 }
 
 impl Default for MyApp {
@@ -42,7 +39,7 @@ impl Default for MyApp {
             cells_across_count: GRID_LENGTH,
             cells_down_count: GRID_LENGTH,
             cell_width: (DEFAULT_WINDOW_SIZE / GRID_LENGTH as f32),
-            file_parser: FileParser::create_empty()//this is very bad 
+            file_parser: FileParser::new_empty(), //this is very bad
         }
     }
 }
@@ -50,35 +47,57 @@ impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         let rounding: Rounding = Rounding::none();
 
-       //let (current_width, current_height) = self.get_window_bounds(frame); //Perhaps unnecessary
-  
-        let side_panel = |ui: &mut Ui| -> (){
-            if(ui.add(egui::Button::new("Pause/Unpause")).clicked()){
+        //let (current_width, current_height) = self.get_window_bounds(frame); //Perhaps unnecessary
+
+        let side_panel = |ui: &mut Ui| -> () {
+            if (ui.add(egui::Button::new("Pause/Unpause")).clicked()) {
                 self.game_board.invert_running();
             };
-            
-            if(ui.add(egui::Button::new("Clear")).clicked()){
+
+            if (ui.add(egui::Button::new("Clear")).clicked()) {
                 self.game_board.stop_running();
                 self.game_board.clear();
                 self.game_board.start_running();
             }
 
-            if(ui.add(egui::Button::new("Load File")).clicked()){
-               let path_opt = MyApp::run_file_dialog();
-               let path: PathBuf;
-               match path_opt {
-                Some(path_valid) => path = path_valid,
-                None => {println!("Invalid file"); return},
-               }
-               println!("{:?}",path);
-               self.file_parser.set_file(path);
-               self.file_parser.fill_grid(self.game_board.get_board());
+            if (ui.add(egui::Button::new("Load File")).clicked()) {
+                let path_opt = MyApp::run_file_dialog();
+                let path: PathBuf;
+                match path_opt {
+                    Some(path_valid) => path = path_valid,
+                    None => {
+                        println!("Invalid file");
+                        return;
+                    }
+                }
 
+                self.file_parser.set_file(path).expect("Error setting file");
+                self.file_parser
+                    .fill_grid(self.game_board.get_board())
+                    .expect("Error filling grid");
+            }
 
-            }  
-            
+            if (ui.add(egui::Button::new("Save File")).clicked()) {
+                let path_opt = MyApp::run_file_dialog();
+                let path: PathBuf;
+                match path_opt {
+                    Some(path_valid) => path = path_valid,
+                    None => {
+                        println!("Invalid file");
+                        return;
+                    }
+                }
+              
+                self.file_parser.set_file(path).expect("Error setting file");
+                let encode_result = self.file_parser.encode_file(self.game_board.get_board());
+                if (encode_result.is_err()) {
+                    panic!("{:?}", encode_result);
+                }
+            }
         };
-        SidePanel::right("Right Panel").default_width(SIDE_PANEL_WIDTH).show(ctx,side_panel);
+        SidePanel::right("Right Panel")
+            .default_width(SIDE_PANEL_WIDTH)
+            .show(ctx, side_panel);
 
         let central_panel = |ui: &mut Ui| -> () {
             //self.print_state();
@@ -120,21 +139,21 @@ impl eframe::App for MyApp {
             self.handle_click(ctx);
         }
 
-        if ctx.input().scroll_delta.y < 0.0 && self.cell_width > 5.0{
+        if ctx.input().scroll_delta.y < 0.0 && self.cell_width > 5.0 {
             self.cell_width -= 5.0;
-            self.cells_across_count = (DEFAULT_WINDOW_SIZE as f32 / self.cell_width).round() as usize;
+            self.cells_across_count =
+                (DEFAULT_WINDOW_SIZE as f32 / self.cell_width).round() as usize;
             self.cells_down_count = (DEFAULT_WINDOW_SIZE / self.cell_width).round() as usize;
         }
         if ctx.input().scroll_delta.y > 0.0 {
             self.cell_width += 5.0;
-            self.cells_across_count = (DEFAULT_WINDOW_SIZE  / self.cell_width).round() as usize;
-            self.cells_down_count = (DEFAULT_WINDOW_SIZE  / self.cell_width).round() as usize;
+            self.cells_across_count = (DEFAULT_WINDOW_SIZE / self.cell_width).round() as usize;
+            self.cells_down_count = (DEFAULT_WINDOW_SIZE / self.cell_width).round() as usize;
         }
 
         ctx.request_repaint();
     }
 }
-
 
 impl MyApp {
     fn handle_click(&mut self, ctx: &Context) {
@@ -144,11 +163,14 @@ impl MyApp {
             Some(pos) => {
                 let x: f32 = pos.x;
                 let y = pos.y;
-                
 
                 let cell_x_pos = (x / self.cell_width).floor() as usize;
                 let cell_y_pos = (y / self.cell_width).floor() as usize;
-                if(!self.game_board.get_board().within_bounds(cell_x_pos, cell_y_pos)){
+                if (!self
+                    .game_board
+                    .get_board()
+                    .within_bounds(cell_x_pos, cell_y_pos))
+                {
                     return;
                 }
                 self.game_board
@@ -175,19 +197,13 @@ impl MyApp {
         );
     }
 
-
-    fn run_file_dialog() -> Option<PathBuf>{
+    fn run_file_dialog() -> Option<PathBuf> {
         let path = FileDialog::new()
-        .set_location("~/Desktop")
-       // .add_filter("PNG Image", &["png"])
-       // .add_filter("JPEG Image", &["jpg", "jpeg"])
-        .show_open_single_file()
-        .unwrap();
+            .set_location("~/Desktop")
+            // .add_filter("PNG Image", &["png"])
+            // .add_filter("JPEG Image", &["jpg", "jpeg"])
+            .show_open_single_file()
+            .unwrap();
         return path;
     }
-
-
 }
-
-
-

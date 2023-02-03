@@ -164,7 +164,7 @@ impl GameOfLife {
     }
 
     fn convert_index(&self, x_pos: usize, y_pos: usize) -> usize {
-        if(!self.within_bounds(x_pos, y_pos)){
+        if (!self.within_bounds(x_pos, y_pos)) {
             panic!("Index not within bounds!");
         }
         return y_pos * self.bounds + x_pos;
@@ -184,7 +184,7 @@ impl fmt::Debug for GameOfLife {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test_one(){
-        assert_eq!(2+2,4);
+    fn test_one() {
+        assert_eq!(2 + 2, 4);
     }
 }

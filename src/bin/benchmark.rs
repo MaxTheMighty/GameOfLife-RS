@@ -1,14 +1,9 @@
-
-
 use std::env;
 use std::time::{Duration, Instant};
 
 use graphics::GameOfLifeRunner;
 const BOARD_SIZE: usize = 10000;
 fn main() {
-   
-    
-    
     let pre_operation = Instant::now();
     update_50_times();
     let post_operation = Instant::now();

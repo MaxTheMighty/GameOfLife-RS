@@ -1,52 +1,49 @@
-use graphics::GameOfLifeRunner;
 use graphics::game_of_life::GameOfLife;
+use graphics::GameOfLifeRunner;
 use grid::Grid;
-use rayon::prelude::*;
-use std::time::Instant;
 use native_dialog::{FileDialog, MessageDialog, MessageType};
+use rayon::prelude::*;
 use std::env;
 use std::fs;
 use std::path;
+use std::time::Instant;
 
 use graphics::file_parser::FileParser;
 
 const GRID_SIZE: usize = 50000;
 fn main() {
-
     let path = FileDialog::new()
-    .add_filter("Text file", &["txt"])
-    .show_open_single_file()
-    .unwrap();
+        .add_filter("Text file", &["txt"])
+        .show_open_single_file()
+        .unwrap();
 
     let path = match path {
         Some(path) => path,
         None => return,
     };
 
-
-//    let path = "G:\\Rust\\GameOfLife-RS\\test_file.txt";
+    //    let path = "G:\\Rust\\GameOfLife-RS\\test_file.txt";
     let mut board: GameOfLifeRunner = GameOfLifeRunner::new(20, 100);
-    let mut parser: FileParser = FileParser::create_empty();
+    let mut parser: FileParser = FileParser::new_empty();
     parser.set_file(path);
     let fill_result = parser.fill_grid(board.get_board());
     match fill_result {
         Ok(()) => println!("Reading file functional!"),
-        Err(err) => panic!("{:?}",err)
+        Err(err) => panic!("{:?}", err),
     }
     board.get_board().print();
     /*
-    let contents = fs::read_to_string(path).expect("Error reading file");
-    let rows = contents.split('\n');
+       let contents = fs::read_to_string(path).expect("Error reading file");
+       let rows = contents.split('\n');
 
-    for row in rows{
-        for char in row.chars(){
-            println!("{}",char);
-        }
-    }
- */
+       for row in rows{
+           for char in row.chars(){
+               println!("{}",char);
+           }
+       }
+    */
 
-
-    /* 
+    /*
     let path = FileDialog::new()
         .set_location("~/Desktop")
         .add_filter("PNG Image", &["png"])
@@ -60,7 +57,7 @@ fn main() {
     };
     */
 
-    /* 
+    /*
     let yes = MessageDialog::new()
         .set_type(MessageType::Info)
         .set_title("Do you want to open the file?")
@@ -72,7 +69,6 @@ fn main() {
         println!("{:?}",path);
     }
     */
-     
 }
 /*
 fn main() {
