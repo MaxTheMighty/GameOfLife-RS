@@ -1,14 +1,7 @@
 use crate::game_of_life::GameOfLife;
 use std::fs::{File, OpenOptions};
-use std::io::{self, BufRead,BufReader, Error, Write};
+use std::io::{self, BufRead, BufReader, Error, Write};
 use std::path::PathBuf;
-
-enum CHAR_MAPPING {
-    ALIVE,
-    DEAD,
-    NEXT_LINE,
-    INVALID,
-}
 
 pub struct FileParser {
     file: Option<File>,
@@ -30,7 +23,7 @@ impl FileParser {
         return FileParser { file: None };
     }
 
-    pub fn new(path_in: PathBuf) -> Result<FileParser, io::Error> {
+    pub fn new(path_in: PathBuf) -> Result<FileParser, std::io::Error> {
         let mut new_parser: FileParser = Self::new_empty();
         new_parser.set_file(path_in)?;
         return Ok(new_parser);
@@ -52,10 +45,10 @@ impl FileParser {
         return Ok(());
     }
 
-    pub fn fill_grid(&mut self, board: &mut GameOfLife) -> Result<(), io::Error> {
+    pub fn fill_grid(&mut self, board: &mut GameOfLife) -> Result<(), std::io::Error> {
         if (!self.file.is_some()) {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
                 "Attempting to fill grid from invalid file",
             ));
         }
@@ -84,35 +77,6 @@ impl FileParser {
         }
         return Ok(());
     }
-
-    pub fn encode_file(&mut self, board: &mut GameOfLife) -> Result<(), Error> {
-        if (!self.file.is_some()) {
-            self.create_file(PathBuf::from("default_save.txt"))
-                .expect("Error creating default file");
-        }
-        let mut file_clone = self.file.as_ref().unwrap();
-        let mut write_buffer: String = String::new();
-        write_buffer.reserve(board.bounds * board.bounds);
-
-        for y_index in 0..board.bounds {
-            for x_index in 0..board.bounds {
-                let state: bool = board.is_alive(x_index, y_index);
-                write_buffer.push(self.encode_state(state));
-            }
-            write_buffer.push('\n');
-        }
-        println!("{:?}", write_buffer);
-        file_clone.write_all(write_buffer.as_bytes())?;
-        return Ok(());
-    }
-
-    fn encode_state(&self, state: bool) -> char {
-        match state {
-            true => return 'X',
-            false => return 'O',
-            _ => return 'O',
-        }
-    }
 }
 
-fn _main() {}
+fn main() {}

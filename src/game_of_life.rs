@@ -160,11 +160,11 @@ impl GameOfLife {
     }
 
     pub fn within_bounds(&self, x_pos: usize, y_pos: usize) -> bool {
-        return (x_pos < self.bounds && y_pos < self.bounds);
+        return x_pos < self.bounds && y_pos < self.bounds;
     }
 
     fn convert_index(&self, x_pos: usize, y_pos: usize) -> usize {
-        if (!self.within_bounds(x_pos, y_pos)) {
+        if !self.within_bounds(x_pos, y_pos) {
             panic!("Index not within bounds!");
         }
         return y_pos * self.bounds + x_pos;
