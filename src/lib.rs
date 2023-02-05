@@ -23,6 +23,7 @@ pub struct GameOfLifeRunner {
     next_board_vec: Vec<bool>,
     multithreading: bool,
     file_parser: FileParser,
+    generation: usize
 }
 
 impl GameOfLifeRunner {
@@ -34,10 +35,11 @@ impl GameOfLifeRunner {
             next_board_vec: vec![false; 2500],
             multithreading: true,
             file_parser: FileParser::new_empty(),
+            generation: 0
         }
     }
 
-    pub fn new(game_of_life_bounds: usize, update_interval: u128) -> Self {
+    pub fn new(game_of_life_bounds: usize, update_interval: u32) -> Self {
         Self {
             board: GameOfLife::new(game_of_life_bounds),
             clock: Clock::new(update_interval),
@@ -45,6 +47,7 @@ impl GameOfLifeRunner {
             next_board_vec: vec![false; game_of_life_bounds * game_of_life_bounds],
             multithreading: true,
             file_parser: FileParser::new_empty(),
+            generation: 0 
         }
     }
 
@@ -55,6 +58,8 @@ impl GameOfLifeRunner {
             } else {
                 self.update();
             }
+
+            self.generation+=1;
         }
     }
 
@@ -71,7 +76,7 @@ impl GameOfLifeRunner {
                     *cell = self.board.cell_born(neighbor_count);
                 }
             });
-        self.board.grid = self.next_board_vec.clone();
+        *self.board.get_grid_ref_mut() = self.next_board_vec.clone();
     }
 
     pub fn update(&mut self) {
@@ -87,7 +92,7 @@ impl GameOfLifeRunner {
                     *cell = self.board.cell_born(neighbor_count);
                 }
             });
-        self.board.grid = self.next_board_vec.clone();
+        self.board.write_grid(&self.next_board_vec);
     }
 
     pub fn run_file_load(&mut self) -> Result<(),Error> {
@@ -104,9 +109,10 @@ impl GameOfLifeRunner {
             Some(path_valid) => path = path_valid,
             None => {
                 return Err(Error::new(std::io::ErrorKind::NotFound,"File not found"));
-            } //I dont like this return here, but its
+            }
         }
         self.fill_from_file(path)?;
+        self.generation = 0;
         return Ok(());
     }
 
@@ -121,17 +127,22 @@ impl GameOfLifeRunner {
     pub fn open_file_dialog() -> Result<Option<PathBuf>,native_dialog::Error> { 
         let path = FileDialog::new()
             .set_location("~/Desktop")
-            // .add_filter("PNG Image", &["png"])
-            // .add_filter("JPEG Image", &["jpg", "jpeg"])
+            .add_filter("Text file", &["txt"]) 
             .show_open_single_file();
-
-        //okay apparently its a Result<Option<>,native_dialog::Error>
-        
        return path; 
+    }
+
+
+    pub fn get_clock_ref_mut(&mut self) -> &mut Clock {
+        return &mut self.clock;
     }
 
     pub fn invert_cell(&mut self, x_pos: usize, y_pos: usize){
         self.board.invert_cell(x_pos,y_pos);
+    }
+
+    pub fn get_generation(&self) -> usize {
+        return self.generation;
     }
 
     pub fn get_board_ref_mut(&mut self) -> &mut GameOfLife{
@@ -139,7 +150,8 @@ impl GameOfLifeRunner {
 
     }
     pub fn clear_board(&mut self){
-        self.board.grid.clear();
+        self.board.clear();
+        self.generation = 0;
     }
 
     pub fn invert_running(&mut self){

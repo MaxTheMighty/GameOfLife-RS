@@ -2,11 +2,13 @@ use eframe::egui;
 use egui::{CentralPanel, Color32, Context, Pos2, Rect, Rounding, SidePanel, Stroke, Ui, Vec2};
 use graphics::{file_parser::FileParser, GameOfLifeRunner};
 use native_dialog::FileDialog;
-use std::{env, path::PathBuf};
+use std::{env, path::PathBuf, ops::RangeInclusive};
 
 const GRID_LENGTH: usize = 200;
-const SIDE_PANEL_WIDTH: f32 = 110.0;
+const SIDE_PANEL_WIDTH: f32 = 160.0;
 const DEFAULT_WINDOW_SIZE: f32 = 1000.0;
+const MAXIMUM_DELAY_SLIDER_VAL: u32 = 200;
+const SLIDER_RANGE: RangeInclusive<u32> = RangeInclusive::new(0, MAXIMUM_DELAY_SLIDER_VAL);
 const ENTIRE_UI_SIZE_X: f32 = SIDE_PANEL_WIDTH + DEFAULT_WINDOW_SIZE;
 const ENTIRE_UI_SIZE_Y: f32 = DEFAULT_WINDOW_SIZE;
 
@@ -57,11 +59,15 @@ impl eframe::App for MyApp {
             if ui.add(egui::Button::new("Clear")).clicked() {
                 self.game_runner.stop_running();
                 self.game_runner.clear_board();
-                self.game_runner.start_running();
             }
             if ui.add(egui::Button::new("Load File")).clicked() {
                 self.game_runner.run_file_load();
+                //TODO: add a panic here
             }
+            ui.label("Generation: ".to_owned() + &self.game_runner.get_generation().to_string());
+        
+            ui.add(egui::Slider::new(self.game_runner.get_clock_ref_mut().get_update_interval_ref_mut(), SLIDER_RANGE));
+            
         };
         SidePanel::right("Right Panel")
             .default_width(SIDE_PANEL_WIDTH)
@@ -126,29 +132,20 @@ impl eframe::App for MyApp {
 impl MyApp {
     fn handle_click(&mut self, ctx: &Context) {
         let mouse_pos: Option<Pos2> = ctx.input().pointer.hover_pos();
-
         match mouse_pos {
             Some(pos) => {
-                let x: f32 = pos.x;
-                let y = pos.y;
-
-                let cell_x_pos = (x / self.cell_width).floor() as usize;
-                let cell_y_pos = (y / self.cell_width).floor() as usize;
-                
-                //This logic will have to be moved to the lib file, we want (mostly) the only thing
-                //that accesses game_of_life to be the runner itsele
-                if !self
-                    .game_runner.get_board_ref_mut()
-                        .within_bounds(cell_x_pos, cell_y_pos)
-                {
-                    return;
+                let mouse_pos = mouse_pos.unwrap();
+                if(!self.mouse_pos_within_grid(mouse_pos)){
+                    return; 
                 }
-                self.game_runner
-                    .invert_cell(cell_x_pos as usize, cell_y_pos as usize);
+                let (x_pos,y_pos) = (mouse_pos.x/self.cell_width,mouse_pos.y/self.cell_width);
+                self.game_runner.invert_cell(x_pos as usize, y_pos as usize);
             }
-            None => {}
+            None => {
+                return;
+            }
         }
-        println!("{:?}", ctx.input().pointer.hover_pos());
+       // println!("{:?}", ctx.input().pointer.hover_pos());
     }
 
     fn _print_state(&mut self) {
@@ -158,5 +155,12 @@ impl MyApp {
             self.cell_width,
             self.cells_across_count
         );
+    }
+
+    fn mouse_pos_within_grid(&mut self, pos: Pos2) -> bool {
+        
+        println!("Comparing {} to {}",pos.x,(self.cell_width * self.cells_across_count as f32));
+        return (pos.x < self.cell_width * self.cells_across_count as f32) && 
+                (pos.y < self.cell_width * self.cells_down_count as f32); 
     }
 }

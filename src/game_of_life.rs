@@ -2,8 +2,8 @@ use std::fmt;
 
 pub struct GameOfLife {
     pub bounds: usize,
-    pub grid: Vec<bool>,
-    generation: u32,
+    grid: Vec<bool>,
+    
 }
 
 impl GameOfLife {
@@ -11,7 +11,6 @@ impl GameOfLife {
         Self {
             bounds: bounds,
             grid: vec![false; bounds * bounds],
-            generation: 0,
         }
     }
 
@@ -111,7 +110,12 @@ impl GameOfLife {
         let index = self.convert_index(x_pos as usize, y_pos as usize);
         return self.grid[index as usize];
     }
-
+    
+    pub fn clear(&mut self){
+        self.grid.clear();
+        self.grid.resize(self.bounds*self.bounds,false);
+    }
+    
     pub fn print(&self) {
         let mut row_out = String::new();
         for y_pos in 0..self.bounds {
@@ -127,7 +131,14 @@ impl GameOfLife {
             row_out.clear();
         }
     }
-
+   
+    pub fn write_grid(&mut self, new_grid: &Vec<bool>){
+        //TODO make this safe, the grid can shrink 
+        self.grid = new_grid.clone();
+    }
+    pub fn get_grid_ref_mut(&mut self) -> &mut Vec<bool> {
+        return &mut self.grid;
+    }
     pub fn _neighbor_matrix(&self) {
         let mut row_out: String = String::new();
         for y_pos in 0..self.bounds {
@@ -139,19 +150,8 @@ impl GameOfLife {
         }
     }
 
-    /*
-    pub fn get_running(&self) -> bool {
-        return self.running;
-    }
+    
 
-    pub fn start_running(&mut self) {
-        self.running = true;
-    }
-
-    pub fn stop_running(&mut self) {
-        self.running = false;
-    }
-*/
     pub fn set_cell(&mut self, x_pos: usize, y_pos: usize, state: bool) {
         let index = self.convert_index(x_pos, y_pos);
         self.grid[index] = state;
@@ -172,7 +172,7 @@ impl GameOfLife {
 impl fmt::Debug for GameOfLife {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Game of life grid")
-            .field("Generation", &self.generation)
+//            .field("Generation", &self.generation)
             .field("Bounds", &self.bounds)
             .field("grid", &self.grid)
             .finish()
