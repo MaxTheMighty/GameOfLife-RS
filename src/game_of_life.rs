@@ -3,9 +3,7 @@ use std::fmt;
 pub struct GameOfLife {
     pub bounds: usize,
     pub grid: Vec<bool>,
-
     generation: u32,
-    running: bool,
 }
 
 impl GameOfLife {
@@ -14,7 +12,6 @@ impl GameOfLife {
             bounds: bounds,
             grid: vec![false; bounds * bounds],
             generation: 0,
-            running: false,
         }
     }
 
@@ -131,7 +128,7 @@ impl GameOfLife {
         }
     }
 
-    pub fn neighbor_matrix(&self) {
+    pub fn _neighbor_matrix(&self) {
         let mut row_out: String = String::new();
         for y_pos in 0..self.bounds {
             for x_pos in 0..self.bounds {
@@ -142,6 +139,7 @@ impl GameOfLife {
         }
     }
 
+    /*
     pub fn get_running(&self) -> bool {
         return self.running;
     }
@@ -153,7 +151,7 @@ impl GameOfLife {
     pub fn stop_running(&mut self) {
         self.running = false;
     }
-
+*/
     pub fn set_cell(&mut self, x_pos: usize, y_pos: usize, state: bool) {
         let index = self.convert_index(x_pos, y_pos);
         self.grid[index] = state;

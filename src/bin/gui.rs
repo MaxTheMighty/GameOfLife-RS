@@ -26,7 +26,7 @@ fn main() {
 
 struct MyApp {
     cell_width: f32,
-    game_board: GameOfLifeRunner,
+    game_runner: GameOfLifeRunner,
     cells_across_count: usize,
     cells_down_count: usize,
     file_parser: FileParser,
@@ -35,7 +35,7 @@ struct MyApp {
 impl Default for MyApp {
     fn default() -> Self {
         Self {
-            game_board: GameOfLifeRunner::new(GRID_LENGTH, 10),
+            game_runner: GameOfLifeRunner::new(GRID_LENGTH, 10),
             cells_across_count: GRID_LENGTH,
             cells_down_count: GRID_LENGTH,
             cell_width: (DEFAULT_WINDOW_SIZE / GRID_LENGTH as f32),
@@ -51,16 +51,16 @@ impl eframe::App for MyApp {
 
         let side_panel = |ui: &mut Ui| -> () {
             if ui.add(egui::Button::new("Pause/Unpause")).clicked() {
-                self.game_board.invert_running();
+                self.game_runner.invert_running();
             };
 
             if ui.add(egui::Button::new("Clear")).clicked() {
-                self.game_board.stop_running();
-                self.game_board.clear();
-                self.game_board.start_running();
+                self.game_runner.stop_running();
+                self.game_runner.clear_board();
+                self.game_runner.start_running();
             }
             if ui.add(egui::Button::new("Load File")).clicked() {
-                self.game_board.run_file_load();
+                self.game_runner.run_file_load();
             }
         };
         SidePanel::right("Right Panel")
@@ -72,7 +72,7 @@ impl eframe::App for MyApp {
             for y_pos in 0..self.cells_down_count {
                 for x_pos in 0..self.cells_across_count {
                     let color: Color32;
-                    if self.game_board.get_board().is_alive(x_pos, y_pos) {
+                    if self.game_runner.get_board_ref_mut().is_alive(x_pos, y_pos) {
                         color = Color32::WHITE;
                     } else {
                         color = Color32::BLACK;
@@ -97,10 +97,10 @@ impl eframe::App for MyApp {
             }
         };
         CentralPanel::default().show(ctx, central_panel);
-        self.game_board.request_update();
+        self.game_runner.request_update();
 
         if ctx.input().key_pressed(egui::Key::Space) {
-            self.game_board.invert_running();
+            self.game_runner.invert_running();
         }
 
         if ctx.input().pointer.any_click() {
@@ -134,15 +134,16 @@ impl MyApp {
 
                 let cell_x_pos = (x / self.cell_width).floor() as usize;
                 let cell_y_pos = (y / self.cell_width).floor() as usize;
+                
+                //This logic will have to be moved to the lib file, we want (mostly) the only thing
+                //that accesses game_of_life to be the runner itsele
                 if !self
-                    .game_board
-                    .get_board()
-                    .within_bounds(cell_x_pos, cell_y_pos)
+                    .game_runner.get_board_ref_mut()
+                        .within_bounds(cell_x_pos, cell_y_pos)
                 {
                     return;
                 }
-                self.game_board
-                    .get_board()
+                self.game_runner
                     .invert_cell(cell_x_pos as usize, cell_y_pos as usize);
             }
             None => {}
